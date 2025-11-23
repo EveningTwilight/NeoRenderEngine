@@ -83,6 +83,10 @@ class MockRenderPassEncoder: RenderPassEncoder {
         // Mock implementation
     }
     
+    func setFragmentTexture(_ texture: Texture, index: Int) {
+        // Mock implementation
+    }
+    
     func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         drawCallMade = true
     }

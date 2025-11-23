@@ -34,6 +34,11 @@ public class MetalRenderPassEncoder: RenderPassEncoder {
         encoder.setFragmentBuffer(b.mtlBuffer, offset: offset, index: index)
     }
 
+    public func setFragmentTexture(_ texture: Texture, index: Int) {
+        guard let t = texture as? MetalTexture else { return }
+        encoder.setFragmentTexture(t.mtlTexture, index: index)
+    }
+
     public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         guard let ib = indexBuffer as? MetalBuffer else { return }
         let mtlIndexType: MTLIndexType = (indexType == .uint16) ? .uint16 : .uint32

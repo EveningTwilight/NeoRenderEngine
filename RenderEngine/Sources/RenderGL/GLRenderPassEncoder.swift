@@ -24,6 +24,10 @@ public class GLRenderPassEncoder: RenderPassEncoder {
         // For now, we leave this stubbed as we focus on Metal.
     }
 
+    public func setFragmentTexture(_ texture: Texture, index: Int) {
+        // glActiveTexture, glBindTexture
+    }
+
     public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         // glDrawElements
     }

@@ -9,22 +9,24 @@ class CubeRenderer: RenderEngineDelegate {
     var vertexBuffer: Buffer?
     var indexBuffer: Buffer?
     var uniformBuffer: Buffer?
+    var texture: Texture?
     
     var rotationAngle: Float = 0.0
     
-    // 8 vertices of a cube: Position (x, y, z) + Color (r, g, b, a)
+    // 8 vertices of a cube: Position (x, y, z) + UV (u, v)
+    // Stride: 5 floats
     let vertices: [Float] = [
         // Front face
-        -0.5, -0.5,  0.5,   1.0, 0.0, 0.0, 1.0, // 0: BL, Red
-         0.5, -0.5,  0.5,   0.0, 1.0, 0.0, 1.0, // 1: BR, Green
-         0.5,  0.5,  0.5,   0.0, 0.0, 1.0, 1.0, // 2: TR, Blue
-        -0.5,  0.5,  0.5,   1.0, 1.0, 0.0, 1.0, // 3: TL, Yellow
+        -0.5, -0.5,  0.5,   0.0, 1.0, // 0: BL
+         0.5, -0.5,  0.5,   1.0, 1.0, // 1: BR
+         0.5,  0.5,  0.5,   1.0, 0.0, // 2: TR
+        -0.5,  0.5,  0.5,   0.0, 0.0, // 3: TL
         
         // Back face
-        -0.5, -0.5, -0.5,   0.0, 1.0, 1.0, 1.0, // 4: BL, Cyan
-         0.5, -0.5, -0.5,   1.0, 0.0, 1.0, 1.0, // 5: BR, Magenta
-         0.5,  0.5, -0.5,   1.0, 1.0, 1.0, 1.0, // 6: TR, White
-        -0.5,  0.5, -0.5,   0.0, 0.0, 0.0, 1.0  // 7: TL, Black
+        -0.5, -0.5, -0.5,   1.0, 1.0, // 4: BL
+         0.5, -0.5, -0.5,   0.0, 1.0, // 5: BR
+         0.5,  0.5, -0.5,   0.0, 0.0, // 6: TR
+        -0.5,  0.5, -0.5,   1.0, 0.0  // 7: TL
     ]
     
     // Indices for 12 triangles (36 indices)
@@ -61,7 +63,8 @@ class CubeRenderer: RenderEngineDelegate {
               let vertexBuffer = vertexBuffer,
               let indexBuffer = indexBuffer,
               let uniformBuffer = uniformBuffer,
-              let depthStencilState = depthStencilState else { return }
+              let depthStencilState = depthStencilState,
+              let texture = texture else { return }
         
         let encoder = commandBuffer.beginRenderPass(renderPassDescriptor)
         
@@ -71,6 +74,7 @@ class CubeRenderer: RenderEngineDelegate {
         
         encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
         encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1) // Uniforms at index 1
+        encoder.setFragmentTexture(texture, index: 0) // Texture at index 0
         
         encoder.drawIndexed(indexCount: indices.count, indexBuffer: indexBuffer, indexOffset: 0, indexType: .uint16)
         
@@ -109,31 +113,33 @@ class CubeRenderer: RenderEngineDelegate {
         
         struct VertexIn {
             float3 position [[attribute(0)]];
-            float4 color [[attribute(1)]];
+            float2 uv [[attribute(1)]];
         };
         
         struct VertexOut {
             float4 position [[position]];
-            float4 color;
+            float2 uv;
         };
         
         vertex VertexOut vertex_main(const device float* vertices [[buffer(0)]],
                                      constant Uniforms& uniforms [[buffer(1)]],
                                      uint vertexID [[vertex_id]]) {
             VertexOut out;
-            uint stride = 7;
+            uint stride = 5; // 3 pos + 2 uv
             uint offset = vertexID * stride;
             
             float3 pos = float3(vertices[offset], vertices[offset+1], vertices[offset+2]);
-            float4 color = float4(vertices[offset+3], vertices[offset+4], vertices[offset+5], vertices[offset+6]);
+            float2 uv = float2(vertices[offset+3], vertices[offset+4]);
             
             out.position = uniforms.modelViewProjectionMatrix * float4(pos, 1.0);
-            out.color = color;
+            out.uv = uv;
             return out;
         }
         
-        fragment float4 fragment_main(VertexOut in [[stage_in]]) {
-            return in.color;
+        fragment float4 fragment_main(VertexOut in [[stage_in]],
+                                      texture2d<float> texture [[texture(0)]]) {
+            constexpr sampler textureSampler (mag_filter::linear, min_filter::linear);
+            return texture.sample(textureSampler, in.uv);
         }
         """
         
@@ -168,5 +174,9 @@ class CubeRenderer: RenderEngineDelegate {
             iPtr.copyMemory(from: $0.baseAddress!, byteCount: iSize)
         }
         self.indexBuffer = iBuffer
+        
+        // Texture
+        let loader = TextureLoader(device: device)
+        self.texture = try loader.createCheckerboardTexture()
     }
 }

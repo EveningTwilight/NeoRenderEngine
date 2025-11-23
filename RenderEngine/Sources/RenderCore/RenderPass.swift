@@ -36,6 +36,7 @@ public protocol RenderPassEncoder {
     func setDepthStencilState(_ depthStencilState: DepthStencilState)
     func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int)
     func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int)
+    func setFragmentTexture(_ texture: Texture, index: Int)
     func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType)
     func endEncoding()
 }
