@@ -2,9 +2,19 @@ import Foundation
 import RenderCore
 
 public class GLBuffer: Buffer {
-    public let length: Int
+    public var length: Int
+    private var data: UnsafeMutableRawPointer
     
-    init(length: Int) {
+    public init(length: Int) {
         self.length = length
+        self.data = UnsafeMutableRawPointer.allocate(byteCount: length, alignment: 1)
+    }
+    
+    deinit {
+        data.deallocate()
+    }
+    
+    public func contents() -> UnsafeMutableRawPointer {
+        return data
     }
 }

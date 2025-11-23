@@ -21,10 +21,15 @@ public struct RenderPassDescriptor {
     }
 }
 
+public enum IndexType {
+    case uint16
+    case uint32
+}
+
 public protocol RenderPassEncoder {
     func setViewport(x: Float, y: Float, width: Float, height: Float)
     func setPipeline(_ pipeline: PipelineState)
     func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int)
-    func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int)
+    func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType)
     func endEncoding()
 }

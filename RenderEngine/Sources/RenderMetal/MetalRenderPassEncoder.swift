@@ -24,9 +24,10 @@ public class MetalRenderPassEncoder: RenderPassEncoder {
         encoder.setVertexBuffer(b.mtlBuffer, offset: offset, index: index)
     }
 
-    public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int) {
+    public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         guard let ib = indexBuffer as? MetalBuffer else { return }
-        encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount, indexType: .uint32, indexBuffer: ib.mtlBuffer, indexBufferOffset: indexOffset)
+        let mtlIndexType: MTLIndexType = (indexType == .uint16) ? .uint16 : .uint32
+        encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount, indexType: mtlIndexType, indexBuffer: ib.mtlBuffer, indexBufferOffset: indexOffset)
     }
 
     public func endEncoding() {

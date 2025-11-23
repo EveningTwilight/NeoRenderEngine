@@ -14,7 +14,7 @@ public class GLRenderPassEncoder: RenderPassEncoder {
         // glBindBuffer
     }
 
-    public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int) {
+    public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         // glDrawElements
     }
 

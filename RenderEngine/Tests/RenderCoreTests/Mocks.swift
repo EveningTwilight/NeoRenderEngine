@@ -4,8 +4,19 @@ import Foundation
 
 class MockBuffer: Buffer {
     var length: Int
+    var data: UnsafeMutableRawPointer
+    
     init(length: Int) {
         self.length = length
+        self.data = UnsafeMutableRawPointer.allocate(byteCount: length, alignment: 1)
+    }
+    
+    deinit {
+        data.deallocate()
+    }
+    
+    func contents() -> UnsafeMutableRawPointer {
+        return data
     }
 }
 
@@ -57,7 +68,7 @@ class MockRenderPassEncoder: RenderPassEncoder {
         vertexBufferSet = true
     }
     
-    func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int) {
+    func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
         drawCallMade = true
     }
     
