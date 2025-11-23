@@ -10,6 +10,7 @@ class CubeRenderer: RenderEngineDelegate {
     var indexBuffer: Buffer?
     var uniformBuffer: Buffer?
     var texture: Texture?
+    var camera: Camera?
     
     var rotationAngle: Float = 0.0
     
@@ -108,9 +109,15 @@ class CubeRenderer: RenderEngineDelegate {
     private func updateUniforms(device: RenderDevice, aspectRatio: Float) {
         rotationAngle += 0.02
         
+        if camera == nil {
+            camera = PerspectiveCamera(position: Vec3(0, 0, 3), target: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
+        }
+        
+        camera?.updateAspectRatio(aspectRatio)
+        
         let model = Mat4.rotation(angleRadians: rotationAngle, axis: Vec3(0, 1, 0)) * Mat4.rotation(angleRadians: rotationAngle * 0.5, axis: Vec3(1, 0, 0))
-        let view = Mat4.lookAt(eye: Vec3(0, 0, 3), center: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
-        let projection = Mat4.perspective(fovRadians: Float.pi / 3, aspectRatio: aspectRatio, near: 0.1, far: 100.0)
+        let view = camera?.viewMatrix ?? Mat4.identity
+        let projection = camera?.projectionMatrix ?? Mat4.identity
         
         let mvp = projection * view * model
         
