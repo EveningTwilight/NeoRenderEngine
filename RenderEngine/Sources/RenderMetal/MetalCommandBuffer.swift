@@ -28,7 +28,17 @@ public class MetalCommandBuffer: CommandBuffer {
             }
         }
         
-        // Depth attachment handling can be added here
+        if let depth = descriptor.depthTarget, let metalDepth = depth.texture as? MetalTexture {
+            let attachment = rpDesc.depthAttachment
+            attachment?.texture = metalDepth.mtlTexture
+            if let clearDepth = depth.clearDepth {
+                attachment?.loadAction = .clear
+                attachment?.clearDepth = clearDepth
+            } else {
+                attachment?.loadAction = .load
+            }
+            attachment?.storeAction = .dontCare
+        }
 
         guard let encoder = mtlCommandBuffer.makeRenderCommandEncoder(descriptor: rpDesc) else {
             fatalError("Failed to create MTLRenderCommandEncoder")

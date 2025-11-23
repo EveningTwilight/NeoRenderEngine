@@ -48,7 +48,7 @@
     - [x] 创建 SwiftUI 工程
     - [x] 集成 RenderEngine
     - [x] 绘制第一个三角形 (Hello Triangle)
-    - [ ] 绘制 3D 立方体 (Hello Cube)
+    - [x] 绘制 3D 立方体 (Hello Cube)
 
 ## Phase 5: 进阶特性 (Advanced)
 - [ ] 3D 模型加载 (.obj)

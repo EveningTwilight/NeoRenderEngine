@@ -3,11 +3,15 @@ import RenderMath
 
 public struct RenderTargetDescriptor {
     public var texture: Texture
-    public var clearColor: Vec4? // Changed to Vec4 for RGBA
+    public var clearColor: Vec4?
+    public var clearDepth: Double?
+    public var clearStencil: UInt32?
     
-    public init(texture: Texture, clearColor: Vec4? = nil) {
+    public init(texture: Texture, clearColor: Vec4? = nil, clearDepth: Double? = nil, clearStencil: UInt32? = nil) {
         self.texture = texture
         self.clearColor = clearColor
+        self.clearDepth = clearDepth
+        self.clearStencil = clearStencil
     }
 }
 

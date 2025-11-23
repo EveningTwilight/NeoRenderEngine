@@ -21,7 +21,7 @@ struct ContentView: View {
 
 class DemoViewModel: ObservableObject {
     @Published var engine: RenderEngine?
-    private var renderer: TriangleRenderer?
+    private var renderer: RenderEngineDelegate?
     
     func setup() {
         do {
@@ -29,7 +29,7 @@ class DemoViewModel: ObservableObject {
             let engine = try RenderEngine(backendType: .metal)
             
             // Create our custom renderer
-            let renderer = TriangleRenderer()
+            let renderer = CubeRenderer()
             engine.delegate = renderer
             
             self.renderer = renderer

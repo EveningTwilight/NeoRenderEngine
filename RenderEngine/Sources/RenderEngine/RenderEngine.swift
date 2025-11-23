@@ -29,6 +29,7 @@ public class RenderEngine {
     private var isRunning: Bool = false
     private var preferredFrameRate: Int = 60
     private var commandQueue: CommandQueue
+    private var depthTexture: Texture?
     
     #if os(iOS)
     private var displayLink: CADisplayLink?
@@ -94,9 +95,17 @@ public class RenderEngine {
         
         guard let texture = currentTexture else { return }
         
+        // Create/Update Depth Texture
+        if depthTexture == nil || depthTexture!.width != texture.width || depthTexture!.height != texture.height {
+            // Use .depth32Float (252)
+            let depthDesc = TextureDescriptor(width: texture.width, height: texture.height, pixelFormat: 252, usage: 0)
+            depthTexture = device.makeTexture(descriptor: depthDesc)
+        }
+        
         // 2. Create RenderPassDescriptor
         let passDescriptor = RenderPassDescriptor(
-            colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: Vec4(0, 0, 0, 1))]
+            colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: Vec4(0, 0, 0, 1))],
+            depthTarget: RenderTargetDescriptor(texture: depthTexture!, clearDepth: 1.0)
         )
         
         // 3. Create CommandBuffer
