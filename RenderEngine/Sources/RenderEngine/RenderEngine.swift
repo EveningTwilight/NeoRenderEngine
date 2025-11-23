@@ -2,6 +2,7 @@ import Foundation
 import RenderCore
 import RenderMetal
 import RenderGL
+import RenderMath
 import QuartzCore
 
 #if os(iOS)
@@ -16,8 +17,7 @@ public enum RenderBackendType {
 }
 
 public protocol RenderEngineDelegate: AnyObject {
-    func renderEngineWillBeginFrame(_ engine: RenderEngine)
-    func renderEngineDidEndFrame(_ engine: RenderEngine)
+    func draw(in engine: RenderEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor)
 }
 
 public class RenderEngine {
@@ -28,6 +28,7 @@ public class RenderEngine {
     
     private var isRunning: Bool = false
     private var preferredFrameRate: Int = 60
+    private var commandQueue: CommandQueue
     
     #if os(iOS)
     private var displayLink: CADisplayLink?
@@ -46,6 +47,7 @@ public class RenderEngine {
         case .openGLES2:
             self.device = GLDevice()
         }
+        self.commandQueue = self.device.makeCommandQueue()
     }
     
     public func startRendering() {
@@ -79,8 +81,32 @@ public class RenderEngine {
     }
     
     @objc private func renderFrame() {
-        delegate?.renderEngineWillBeginFrame(self)
-        // Actual rendering logic would go here or be triggered by the delegate
-        delegate?.renderEngineDidEndFrame(self)
+        guard let delegate = delegate else { return }
+        
+        var currentTexture: Texture?
+        
+        // 1. Acquire Drawable
+        if backendType == .metal {
+             guard let layer = targetLayer as? CAMetalLayer else { return }
+             guard let drawable = layer.nextDrawable() else { return }
+             currentTexture = MetalTexture(drawable.texture, drawable: drawable)
+        }
+        
+        guard let texture = currentTexture else { return }
+        
+        // 2. Create RenderPassDescriptor
+        let passDescriptor = RenderPassDescriptor(
+            colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: Vec4(0, 0, 0, 1))]
+        )
+        
+        // 3. Create CommandBuffer
+        let commandBuffer = commandQueue.makeCommandBuffer()
+        
+        // 4. Notify Delegate to Draw
+        delegate.draw(in: self, commandBuffer: commandBuffer, renderPassDescriptor: passDescriptor)
+        
+        // 5. Present and Commit
+        commandBuffer.present(texture)
+        commandBuffer.commit()
     }
 }

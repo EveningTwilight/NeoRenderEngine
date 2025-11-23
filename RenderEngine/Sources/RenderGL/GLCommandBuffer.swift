@@ -6,6 +6,10 @@ public class GLCommandBuffer: CommandBuffer {
         return GLRenderPassEncoder()
     }
 
+    public func present(_ texture: Texture) {
+        // GL usually handles swap buffers at the context level
+    }
+
     public func commit() {
         // TODO: Execute GL commands
     }

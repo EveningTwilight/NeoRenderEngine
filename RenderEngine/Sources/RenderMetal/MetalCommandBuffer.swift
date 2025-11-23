@@ -36,6 +36,12 @@ public class MetalCommandBuffer: CommandBuffer {
         return MetalRenderPassEncoder(encoder: encoder)
     }
 
+    public func present(_ texture: Texture) {
+        if let metalTex = texture as? MetalTexture, let drawable = metalTex.drawable {
+            mtlCommandBuffer.present(drawable)
+        }
+    }
+
     public func commit() {
         mtlCommandBuffer.commit()
     }

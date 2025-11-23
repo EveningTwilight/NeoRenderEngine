@@ -1,14 +1,18 @@
 import Foundation
 import Metal
+import QuartzCore
 import RenderCore
 
 public class MetalTexture: Texture {
     public let mtlTexture: MTLTexture
+    public let drawable: CAMetalDrawable? // Keep reference to drawable if this is a swapchain texture
+    
     public var width: Int { mtlTexture.width }
     public var height: Int { mtlTexture.height }
 
-    init(_ texture: MTLTexture) {
+    public init(_ texture: MTLTexture, drawable: CAMetalDrawable? = nil) {
         self.mtlTexture = texture
+        self.drawable = drawable
     }
 
     public func upload(data: Data, bytesPerRow: Int) throws {

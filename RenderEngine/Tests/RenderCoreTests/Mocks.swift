@@ -69,10 +69,15 @@ class MockRenderPassEncoder: RenderPassEncoder {
 class MockCommandBuffer: CommandBuffer {
     var committed = false
     var encoderCreated = false
+    var presentedTexture: Texture?
     
     func beginRenderPass(_ descriptor: RenderPassDescriptor) -> RenderPassEncoder {
         encoderCreated = true
         return MockRenderPassEncoder()
+    }
+    
+    func present(_ texture: Texture) {
+        presentedTexture = texture
     }
     
     func commit() {
