@@ -19,4 +19,7 @@ public protocol RenderDevice {
 
     /// Create a shader loader helper bound to this device
     func makeShaderLoader() -> ShaderLoader
+
+    /// Create depth stencil state
+    func makeDepthStencilState(descriptor: DepthStencilDescriptor) -> DepthStencilState
 }

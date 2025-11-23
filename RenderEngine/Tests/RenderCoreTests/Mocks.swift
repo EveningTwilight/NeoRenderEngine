@@ -49,6 +49,13 @@ class MockPipelineState: PipelineState {
     }
 }
 
+class MockDepthStencilState: DepthStencilState {
+    var descriptor: DepthStencilDescriptor
+    init(descriptor: DepthStencilDescriptor) {
+        self.descriptor = descriptor
+    }
+}
+
 class MockRenderPassEncoder: RenderPassEncoder {
     var viewportSet = false
     var pipelineSet = false
@@ -63,9 +70,17 @@ class MockRenderPassEncoder: RenderPassEncoder {
     func setPipeline(_ pipeline: PipelineState) {
         pipelineSet = true
     }
+
+    func setDepthStencilState(_ depthStencilState: DepthStencilState) {
+        // Mock implementation
+    }
     
     func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
         vertexBufferSet = true
+    }
+    
+    func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int) {
+        // Mock implementation
     }
     
     func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
@@ -131,5 +146,9 @@ class MockRenderDevice: RenderDevice {
     
     func makeShaderLoader() -> ShaderLoader {
         return MockShaderLoader()
+    }
+
+    func makeDepthStencilState(descriptor: DepthStencilDescriptor) -> DepthStencilState {
+        return MockDepthStencilState(descriptor: descriptor)
     }
 }

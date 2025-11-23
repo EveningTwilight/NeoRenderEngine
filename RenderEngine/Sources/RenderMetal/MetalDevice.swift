@@ -62,6 +62,10 @@ public class MetalDevice: RenderDevice {
         return MetalShaderLoader(device: self)
     }
     
+    public func makeDepthStencilState(descriptor: DepthStencilDescriptor) -> DepthStencilState {
+        return MetalDepthStencilState(descriptor: descriptor, device: device)
+    }
+    
     public func loadLibrary(from url: URL) throws -> MTLLibrary {
         return try libraryCache.loadLibrary(from: url)
     }
@@ -99,6 +103,10 @@ public class MetalDevice: RenderDevice {
             desc.colorAttachments[0].pixelFormat = pf
         } else {
             desc.colorAttachments[0].pixelFormat = .bgra8Unorm
+        }
+        
+        if let dpf = MTLPixelFormat(rawValue: UInt(descriptor.depthPixelFormat)), dpf != .invalid {
+            desc.depthAttachmentPixelFormat = dpf
         }
 
         var pipelineStateResult: MTLRenderPipelineState? = nil

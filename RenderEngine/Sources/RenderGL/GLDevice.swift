@@ -26,6 +26,10 @@ public class GLDevice: RenderDevice {
         return GLShaderLoader(device: self)
     }
 
+    public func makeDepthStencilState(descriptor: DepthStencilDescriptor) -> DepthStencilState {
+        return GLDepthStencilState(descriptor: descriptor)
+    }
+
     public func makePipeline(descriptor: PipelineDescriptor, shader: ShaderProgram) throws -> PipelineState {
         return GLPipeline(descriptor: descriptor)
     }

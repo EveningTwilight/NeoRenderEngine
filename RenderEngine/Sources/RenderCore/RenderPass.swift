@@ -29,7 +29,9 @@ public enum IndexType {
 public protocol RenderPassEncoder {
     func setViewport(x: Float, y: Float, width: Float, height: Float)
     func setPipeline(_ pipeline: PipelineState)
+    func setDepthStencilState(_ depthStencilState: DepthStencilState)
     func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int)
+    func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int)
     func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType)
     func endEncoding()
 }

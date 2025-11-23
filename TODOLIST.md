@@ -21,6 +21,8 @@
     - [x] 实现 MetalBuffer/MetalTexture
     - [x] 实现 MetalCommandQueue
     - [x] 实现 MetalPipeline
+    - [x] 实现 MetalDepthStencilState
+    - [x] 实现 Uniform Buffer 绑定 (setFragmentBuffer)
 - [x] **RenderGL 模块**
     - [x] 实现 GLDevice (ES 2.0)
     - [x] 实现 GLBuffer/GLTexture
@@ -35,16 +37,18 @@
 - [x] **RenderCore 测试**
     - [x] Logger 测试
     - [x] 基础协议 Mock 测试
+    - [x] DepthStencilState 测试
 
 ## Phase 4: 引擎封装与 Demo (Engine & Demo)
 - [ ] **RenderEngine 模块**
     - [ ] 实现 Renderer (渲染循环)
     - [ ] 实现 RenderLayer (UIView/SwiftUI 桥接)
     - [ ] 资源管理器
-- [ ] **Demo 工程** (暂缓)
-    - [ ] 创建 SwiftUI 工程
-    - [ ] 集成 RenderEngine
-    - [ ] 绘制第一个三角形 (Hello Triangle)
+- [x] **Demo 工程**
+    - [x] 创建 SwiftUI 工程
+    - [x] 集成 RenderEngine
+    - [x] 绘制第一个三角形 (Hello Triangle)
+    - [ ] 绘制 3D 立方体 (Hello Cube)
 
 ## Phase 5: 进阶特性 (Advanced)
 - [ ] 3D 模型加载 (.obj)

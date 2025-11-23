@@ -3,25 +3,25 @@
 ## 1. 核心架构 (RenderCore)
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
-| RHI 抽象层 | 📅 计划中 | 定义 Device, Buffer, Texture, Pipeline 等协议 |
-| 渲染管线抽象 | 📅 计划中 | RenderPass, CommandBuffer 抽象 |
+| RHI 抽象层 | ✅ 已完成 | 定义 Device, Buffer, Texture, Pipeline 等协议 |
+| 渲染管线抽象 | ✅ 已完成 | RenderPass, CommandBuffer 抽象 |
 | Shader 反射 | 📅 计划中 | 统一的 Shader 参数反射与绑定机制 |
 
 ## 2. 数学库 (RenderMath)
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
-| 向量 (Vec2, Vec3, Vec4) | 📅 计划中 | 基于 SIMD 封装 |
-| 矩阵 (Mat3, Mat4) | 📅 计划中 | 常用变换矩阵 |
-| 四元数 (Quaternion) | 📅 计划中 | 旋转表示 |
-| 欧拉角 (EulerAngles) | 📅 计划中 | 角度表示 |
+| 向量 (Vec2, Vec3, Vec4) | ✅ 已完成 | 基于 SIMD 封装 |
+| 矩阵 (Mat3, Mat4) | ✅ 已完成 | 常用变换矩阵 |
+| 四元数 (Quaternion) | ✅ 已完成 | 旋转表示 |
+| 欧拉角 (EulerAngles) | ✅ 已完成 | 角度表示 |
 
 ## 3. 渲染后端 (Backends)
 | 特性 | Metal | OpenGL ES 2.0 | 描述 |
 | --- | --- | --- | --- |
-| 基础图元渲染 | 📅 计划中 | 📅 计划中 | 三角形、线段、点 |
-| 纹理支持 | 📅 计划中 | 📅 计划中 | 2D 纹理加载与采样 |
+| 基础图元渲染 | ✅ 已完成 | 📅 计划中 | 三角形、线段、点 |
+| 纹理支持 | 🚧 进行中 | 📅 计划中 | 2D 纹理加载与采样 |
 | 离屏渲染 | 📅 计划中 | 📅 计划中 | 渲染到纹理 |
-| 深度/模板测试 | 📅 计划中 | 📅 计划中 | |
+| 深度/模板测试 | ✅ 已完成 | 📅 计划中 | 深度缓冲与测试支持 |
 | 混合模式 (Blend Mode) | 📅 计划中 | 📅 计划中 | |
 
 ## 4. 引擎功能 (RenderEngine)

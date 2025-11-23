@@ -19,9 +19,19 @@ public class MetalRenderPassEncoder: RenderPassEncoder {
         encoder.setRenderPipelineState(p.pipelineState)
     }
 
+    public func setDepthStencilState(_ depthStencilState: DepthStencilState) {
+        guard let dss = depthStencilState as? MetalDepthStencilState else { return }
+        encoder.setDepthStencilState(dss.mtlDepthStencilState)
+    }
+
     public func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
         guard let b = buffer as? MetalBuffer else { return }
         encoder.setVertexBuffer(b.mtlBuffer, offset: offset, index: index)
+    }
+
+    public func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int) {
+        guard let b = buffer as? MetalBuffer else { return }
+        encoder.setFragmentBuffer(b.mtlBuffer, offset: offset, index: index)
     }
 
     public func drawIndexed(indexCount: Int, indexBuffer: Buffer, indexOffset: Int, indexType: IndexType) {
