@@ -30,13 +30,13 @@ public struct Mat4: Equatable {
                                   far: Float) -> Mat4 {
         let ys = 1 / tan(fovRadians * 0.5)
         let xs = ys / aspectRatio
-        let zs = far / (far - near)
+        let zs = far / (near - far)
         
         let matrix = simd_float4x4(
             SIMD4(xs, 0, 0, 0),
             SIMD4(0, ys, 0, 0),
-            SIMD4(0, 0, zs, 1),
-            SIMD4(0, 0, -near * zs, 0)
+            SIMD4(0, 0, zs, -1),
+            SIMD4(0, 0, zs * near, 0)
         )
         
         return Mat4(storage: matrix)
