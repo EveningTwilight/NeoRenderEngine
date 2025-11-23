@@ -1,0 +1,28 @@
+# System files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Build generated
+.build/
+.swiftpm/
+DerivedData/
+
+# Xcode
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# User specific
+Others/
+
+# Obj-C/Swift specific
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Temporary files
+tmp/
+*.tmp
