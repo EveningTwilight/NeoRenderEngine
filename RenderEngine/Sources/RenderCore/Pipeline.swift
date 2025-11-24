@@ -8,15 +8,23 @@ public enum UniformType: Hashable {
     case mat4
 }
 
+public enum ShaderStage: Hashable {
+    case vertex
+    case fragment
+    case both
+}
+
 public struct UniformBinding: Hashable {
     public var name: String
     public var type: UniformType
     public var bufferIndex: Int
+    public var stage: ShaderStage
     
-    public init(name: String, type: UniformType, bufferIndex: Int) {
+    public init(name: String, type: UniformType, bufferIndex: Int, stage: ShaderStage = .both) {
         self.name = name
         self.type = type
         self.bufferIndex = bufferIndex
+        self.stage = stage
     }
 }
 

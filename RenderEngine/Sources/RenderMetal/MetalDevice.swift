@@ -129,11 +129,13 @@ public class MetalDevice: RenderDevice {
         }
 
         var pipelineStateResult: MTLRenderPipelineState? = nil
+        var reflection: MTLRenderPipelineReflection? = nil
         var pipelineError: Error? = nil
         
         MetalDevice.pipelineCompileQueue.sync {
             do {
-                pipelineStateResult = try self.device.makeRenderPipelineState(descriptor: desc)
+                let options: MTLPipelineOption = [.bufferTypeInfo, .argumentInfo]
+                pipelineStateResult = try self.device.makeRenderPipelineState(descriptor: desc, options: options, reflection: &reflection)
             } catch {
                 pipelineError = error
             }
@@ -144,7 +146,7 @@ public class MetalDevice: RenderDevice {
             throw NSError(domain: "RenderEngineMetal", code: -4, userInfo: [NSLocalizedDescriptionKey: "Unknown error creating pipeline state"])
         }
 
-        let state = MetalPipelineState(descriptor: descriptor, pipelineState: pipeline)
+        let state = MetalPipelineState(descriptor: descriptor, pipelineState: pipeline, reflection: reflection)
         pipelineCache.insert(descriptor, value: state)
         return state
     }
