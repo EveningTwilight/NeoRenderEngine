@@ -1,3 +1,4 @@
+#if os(iOS)
 import Foundation
 import RenderCore
 
@@ -12,3 +13,4 @@ public class GLShaderLoader: ShaderLoader {
         return try device.makeShaderProgram(source: source, label: label)
     }
 }
+#endif

@@ -74,5 +74,9 @@ let package = Package(
             name: "RenderCoreTests",
             dependencies: ["RenderCore"]
         ),
+        .testTarget(
+            name: "RenderEngineTests",
+            dependencies: ["RenderEngine"]
+        ),
     ]
 )

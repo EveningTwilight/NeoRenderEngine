@@ -15,7 +15,7 @@ class TriangleRenderer: RenderEngineDelegate {
          0.5, -0.5, 0.0,   0.0, 0.0, 1.0, 1.0  // Bottom Right, Blue
     ]
     
-    func draw(in engine: RenderEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor) {
+    func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor) {
         let device = engine.device
         
         // 1. Initialize Resources (One-time)

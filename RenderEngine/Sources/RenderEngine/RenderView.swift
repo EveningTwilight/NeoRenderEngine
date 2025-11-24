@@ -7,7 +7,7 @@ import UIKit
 import SwiftUI
 
 public class RenderView: UIView {
-    public var engine: RenderEngine? {
+    public var engine: GraphicEngine? {
         didSet {
             setupLayer()
         }
@@ -31,9 +31,9 @@ public class RenderView: UIView {
 }
 
 public struct RenderViewRepresentable: UIViewRepresentable {
-    let engine: RenderEngine
+    let engine: GraphicEngine
     
-    public init(engine: RenderEngine) {
+    public init(engine: GraphicEngine) {
         self.engine = engine
     }
     
@@ -51,7 +51,7 @@ import AppKit
 import SwiftUI
 
 public class RenderView: NSView {
-    public var engine: RenderEngine? {
+    public var engine: GraphicEngine? {
         didSet {
             setupLayer()
         }
@@ -76,9 +76,9 @@ public class RenderView: NSView {
 }
 
 public struct RenderViewRepresentable: NSViewRepresentable {
-    let engine: RenderEngine
+    let engine: GraphicEngine
     
-    public init(engine: RenderEngine) {
+    public init(engine: GraphicEngine) {
         self.engine = engine
     }
     

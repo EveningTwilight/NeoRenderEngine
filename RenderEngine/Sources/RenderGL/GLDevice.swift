@@ -1,9 +1,15 @@
+#if os(iOS)
 import Foundation
 import RenderCore
 import RenderMath
+import OpenGLES
 
 public class GLDevice: RenderDevice {
-    public init() {}
+    public init() {
+    }
+    
+    deinit {
+    }
 
     public func makeBuffer(length: Int) -> Buffer {
         return GLBuffer(length: length)
@@ -18,8 +24,15 @@ public class GLDevice: RenderDevice {
     }
 
     public func makeShaderProgram(source: String, label: String?) throws -> ShaderProgram {
-        // In a real implementation, this would compile GLSL
-        return GLShader(label: label)
+        let components = source.components(separatedBy: "// --- FRAGMENT ---")
+        if components.count < 2 {
+             throw NSError(domain: "GLDevice", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid GLSL source format. Use '// --- FRAGMENT ---' to separate vertex and fragment shaders."])
+        }
+        
+        let vertexSource = components[0]
+        let fragmentSource = components[1]
+        
+        return try GLShader(vertexSource: vertexSource, fragmentSource: fragmentSource, label: label)
     }
 
     public func makeShaderLoader() -> ShaderLoader {
@@ -31,6 +44,10 @@ public class GLDevice: RenderDevice {
     }
 
     public func makePipeline(descriptor: PipelineDescriptor, shader: ShaderProgram) throws -> PipelineState {
-        return GLPipeline(descriptor: descriptor)
+        guard let glShader = shader as? GLShader else {
+            throw NSError(domain: "GLDevice", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid shader type"])
+        }
+        return GLPipeline(descriptor: descriptor, shader: glShader)
     }
 }
+#endif

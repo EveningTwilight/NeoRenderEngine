@@ -1,3 +1,4 @@
+#if os(iOS)
 import Foundation
 import RenderCore
 
@@ -6,3 +7,4 @@ public class GLCommandQueue: CommandQueue {
         return GLCommandBuffer()
     }
 }
+#endif

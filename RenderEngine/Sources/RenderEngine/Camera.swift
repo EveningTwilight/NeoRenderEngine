@@ -1,10 +1,16 @@
 import Foundation
 import RenderMath
 
+public enum CameraProjectionType {
+    case metal // z in [0, 1]
+    case openGL // z in [-1, 1]
+}
+
 public protocol Camera: AnyObject {
     var position: Vec3 { get set }
     var target: Vec3 { get set }
     var up: Vec3 { get set }
+    var projectionType: CameraProjectionType { get set }
     
     var viewMatrix: Mat4 { get }
     var projectionMatrix: Mat4 { get }
@@ -16,6 +22,7 @@ public class PerspectiveCamera: Camera {
     public var position: Vec3
     public var target: Vec3
     public var up: Vec3
+    public var projectionType: CameraProjectionType = .metal
     
     public var fovRadians: Float
     public var aspectRatio: Float
@@ -43,7 +50,12 @@ public class PerspectiveCamera: Camera {
     }
     
     public var projectionMatrix: Mat4 {
-        return Mat4.perspective(fovRadians: fovRadians, aspectRatio: aspectRatio, near: near, far: far)
+        switch projectionType {
+        case .metal:
+            return Mat4.perspective(fovRadians: fovRadians, aspectRatio: aspectRatio, near: near, far: far)
+        case .openGL:
+            return Mat4.perspectiveGL(fovRadians: fovRadians, aspectRatio: aspectRatio, near: near, far: far)
+        }
     }
     
     public func updateAspectRatio(_ aspectRatio: Float) {

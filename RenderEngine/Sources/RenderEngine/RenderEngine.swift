@@ -17,10 +17,10 @@ public enum RenderBackendType {
 }
 
 public protocol RenderEngineDelegate: AnyObject {
-    func draw(in engine: RenderEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor)
+    func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor)
 }
 
-public class RenderEngine {
+public class GraphicEngine {
     public let device: RenderDevice
     public let backendType: RenderBackendType
     public weak var delegate: RenderEngineDelegate?
@@ -42,11 +42,15 @@ public class RenderEngine {
         switch backendType {
         case .metal:
             guard let d = MetalDevice() else {
-                throw NSError(domain: "RenderEngine", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create Metal device"])
+                throw NSError(domain: "GraphicEngine", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create Metal device"])
             }
             self.device = d
         case .openGLES2:
+            #if os(iOS)
             self.device = GLDevice()
+            #else
+            throw NSError(domain: "GraphicEngine", code: -1, userInfo: [NSLocalizedDescriptionKey: "OpenGL ES 2.0 is only supported on iOS"])
+            #endif
         }
         self.commandQueue = self.device.makeCommandQueue()
     }
@@ -91,6 +95,11 @@ public class RenderEngine {
              guard let layer = targetLayer as? CAMetalLayer else { return }
              guard let drawable = layer.nextDrawable() else { return }
              currentTexture = MetalTexture(drawable.texture, drawable: drawable)
+        } else if backendType == .openGLES2 {
+            #if os(iOS)
+            // iOS GL context handling would go here (usually via CAEAGLLayer)
+            // For now, we assume the context is managed externally or by GLKView
+            #endif
         }
         
         guard let texture = currentTexture else { return }
@@ -107,6 +116,16 @@ public class RenderEngine {
             colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: Vec4(0, 0, 0, 1))],
             depthTarget: RenderTargetDescriptor(texture: depthTexture!, clearDepth: 1.0)
         )
+        
+        // Manual Clear for GL (since CommandBuffer ignores descriptor)
+        if backendType == .openGLES2 {
+            #if os(iOS)
+            let c = passDescriptor.colorTargets[0].clearColor ?? Vec4(0, 0, 0, 1)
+            glClearColor(GLclampf(c.x), GLclampf(c.y), GLclampf(c.z), GLclampf(c.w))
+            glClearDepthf(GLclampf(passDescriptor.depthTarget?.clearDepth ?? 1.0))
+            glClear(GLbitfield(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
+            #endif
+        }
         
         // 3. Create CommandBuffer
         let commandBuffer = commandQueue.makeCommandBuffer()

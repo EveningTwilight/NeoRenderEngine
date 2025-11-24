@@ -32,7 +32,7 @@ public class MetalDevice: RenderDevice {
         let mtlDesc = MTLTextureDescriptor()
         mtlDesc.width = descriptor.width
         mtlDesc.height = descriptor.height
-        if let pf = MTLPixelFormat(rawValue: UInt(descriptor.pixelFormat)) {
+        if let pf = MTLPixelFormat(rawValue: UInt(descriptor.pixelFormat)), pf != .invalid {
             mtlDesc.pixelFormat = pf
         } else {
             mtlDesc.pixelFormat = .bgra8Unorm

@@ -20,13 +20,13 @@ struct ContentView: View {
 }
 
 class DemoViewModel: ObservableObject {
-    @Published var engine: RenderEngine?
+    @Published var engine: GraphicEngine?
     private var renderer: RenderEngineDelegate?
     
     func setup() {
         do {
             // Initialize Engine with Metal backend
-            let engine = try RenderEngine(backendType: .metal)
+            let engine = try GraphicEngine(backendType: .openGLES2)
             
             // Create our custom renderer
             let renderer = CubeRenderer()
