@@ -27,6 +27,7 @@
     - [x] 实现 GLDevice (ES 2.0)
     - [x] 实现 GLBuffer/GLTexture
     - [x] 适配层实现
+    - [x] 限制 OpenGL ES 2.0 仅支持 iOS (移除 macOS 支持)
 
 ## Phase 3: 单元测试与稳定性 (Testing & Stability)
 - [x] **RenderMath 测试**
@@ -38,6 +39,9 @@
     - [x] Logger 测试
     - [x] 基础协议 Mock 测试
     - [x] DepthStencilState 测试
+- [x] **RenderEngine 测试**
+    - [x] Backend 初始化测试 (Metal/GL)
+    - [x] 跨平台编译修复 (macOS/iOS)
 
 ## Phase 4: 引擎封装与 Demo (Engine & Demo)
 - [ ] **RenderEngine 模块**

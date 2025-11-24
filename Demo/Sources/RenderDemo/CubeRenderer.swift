@@ -4,12 +4,9 @@ import RenderCore
 import RenderMath
 
 class CubeRenderer: RenderEngineDelegate {
-    var pipeline: PipelineState?
-    var depthStencilState: DepthStencilState?
-    var vertexBuffer: Buffer?
-    var indexBuffer: Buffer?
+    var mesh: Mesh?
+    var material: Material?
     var uniformBuffer: Buffer?
-    var texture: Texture?
     var camera: RenderEngine.Camera?
     
     var rotationAngle: Float = 0.0
@@ -78,7 +75,7 @@ class CubeRenderer: RenderEngineDelegate {
         let device = engine.device
         let resourceManager = engine.resourceManager
         
-        if pipeline == nil {
+        if material == nil {
             do {
                 try setupResources(device: device, resourceManager: resourceManager)
             } catch {
@@ -89,24 +86,27 @@ class CubeRenderer: RenderEngineDelegate {
         
         updateUniforms(device: device, aspectRatio: Float(renderPassDescriptor.colorTargets[0].texture.width) / Float(renderPassDescriptor.colorTargets[0].texture.height))
         
-        guard let pipeline = pipeline, 
-              let vertexBuffer = vertexBuffer,
-              let indexBuffer = indexBuffer,
-              let uniformBuffer = uniformBuffer,
-              let depthStencilState = depthStencilState,
-              let texture = texture else { return }
+        guard let mesh = mesh,
+              let material = material,
+              let uniformBuffer = uniformBuffer else { return }
         
         let encoder = commandBuffer.beginRenderPass(renderPassDescriptor)
         
-        encoder.setPipeline(pipeline)
-        encoder.setDepthStencilState(depthStencilState)
         encoder.setViewport(x: 0, y: 0, width: Float(renderPassDescriptor.colorTargets[0].texture.width), height: Float(renderPassDescriptor.colorTargets[0].texture.height))
         
-        encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-        encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1) // Uniforms at index 1
-        encoder.setFragmentTexture(texture, index: 0) // Texture at index 0
+        // Bind Material (Pipeline, DepthState, Textures)
+        material.bind(to: encoder)
         
-        encoder.drawIndexed(indexCount: indices.count, indexBuffer: indexBuffer, indexOffset: 0, indexType: .uint16)
+        // Bind Mesh (Vertex Buffer)
+        encoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
+        
+        // Bind Uniforms
+        encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
+        
+        // Draw
+        if let indexBuffer = mesh.indexBuffer {
+            encoder.drawIndexed(indexCount: mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: mesh.indexType)
+        }
         
         encoder.endEncoding()
     }
@@ -234,31 +234,17 @@ class CubeRenderer: RenderEngineDelegate {
         pipelineDesc.vertexDescriptor = vertexDescriptor
         pipelineDesc.uniformBindings = uniformBindings
         
-        self.pipeline = try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader)
+        self.material = Material(pipelineState: try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader))
         
         // Depth Stencil State
         let depthDesc = DepthStencilDescriptor(label: "DepthState", depthCompareFunction: .less, isDepthWriteEnabled: true)
-        self.depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
-        
-        // Vertex Buffer
-        let vSize = vertices.count * MemoryLayout<Float>.size
-        let vBuffer = device.makeBuffer(length: vSize)
-        let vPtr = vBuffer.contents()
-        vertices.withUnsafeBytes {
-            vPtr.copyMemory(from: $0.baseAddress!, byteCount: vSize)
-        }
-        self.vertexBuffer = vBuffer
-        
-        // Index Buffer
-        let iSize = indices.count * MemoryLayout<UInt16>.size
-        let iBuffer = device.makeBuffer(length: iSize)
-        let iPtr = iBuffer.contents()
-        indices.withUnsafeBytes {
-            iPtr.copyMemory(from: $0.baseAddress!, byteCount: iSize)
-        }
-        self.indexBuffer = iBuffer
+        self.material?.depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
         
         // Texture
-        self.texture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
+        let tex = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
+        self.material?.setTexture(tex, at: 0)
+        
+        // Create Mesh
+        self.mesh = Mesh(device: device, vertices: vertices, indices: indices, vertexDescriptor: vertexDescriptor)
     }
 }
