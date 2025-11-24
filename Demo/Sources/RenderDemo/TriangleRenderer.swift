@@ -15,6 +15,10 @@ class TriangleRenderer: RenderEngineDelegate {
          0.5, -0.5, 0.0,   0.0, 0.0, 1.0, 1.0  // Bottom Right, Blue
     ]
     
+    func update(deltaTime: Double) {
+        // No update logic for static triangle
+    }
+    
     func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor) {
         let device = engine.device
         

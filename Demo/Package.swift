@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "RenderDemo",
     platforms: [
-        .macOS(.v11)
+        .macOS(.v11),
+        .iOS(.v14)
     ],
     dependencies: [
         .package(path: "../RenderEngine")

@@ -26,7 +26,7 @@ class DemoViewModel: ObservableObject {
     func setup() {
         do {
             // Initialize Engine with Metal backend
-            let engine = try GraphicEngine(backendType: .openGLES2)
+            let engine = try GraphicEngine(backendType: .metal)
             
             // Create our custom renderer
             let renderer = CubeRenderer()

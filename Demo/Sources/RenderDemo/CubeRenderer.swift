@@ -70,12 +70,17 @@ class CubeRenderer: RenderEngineDelegate {
         20, 21, 22, 22, 23, 20
     ]
     
+    func update(deltaTime: Double) {
+        rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
+    }
+    
     func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor) {
         let device = engine.device
+        let resourceManager = engine.resourceManager
         
         if pipeline == nil {
             do {
-                try setupResources(device: device)
+                try setupResources(device: device, resourceManager: resourceManager)
             } catch {
                 print("Failed to setup resources: \(error)")
                 return
@@ -107,8 +112,6 @@ class CubeRenderer: RenderEngineDelegate {
     }
     
     private func updateUniforms(device: RenderDevice, aspectRatio: Float) {
-        rotationAngle += 0.02
-        
         if camera == nil {
             let isGL = String(describing: type(of: device)) == "GLDevice"
             let cam = RenderEngine.PerspectiveCamera(position: Vec3(0, 0, 3), target: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
@@ -135,7 +138,7 @@ class CubeRenderer: RenderEngineDelegate {
         }
     }
     
-    private func setupResources(device: RenderDevice) throws {
+    private func setupResources(device: RenderDevice, resourceManager: ResourceManager) throws {
         // Shader Source
         let shaderSource: String
         var vertexDescriptor: RenderCore.VertexDescriptor? = nil
@@ -221,7 +224,7 @@ class CubeRenderer: RenderEngineDelegate {
             """
         }
         
-        let shader = try device.makeShaderProgram(source: shaderSource, label: "CubeShader")
+        let shader = try resourceManager.createShader(name: "CubeShader", source: shaderSource)
         
         var pipelineDesc = PipelineDescriptor(label: "CubePipeline")
         pipelineDesc.vertexFunction = "vertex_main"
@@ -231,7 +234,7 @@ class CubeRenderer: RenderEngineDelegate {
         pipelineDesc.vertexDescriptor = vertexDescriptor
         pipelineDesc.uniformBindings = uniformBindings
         
-        self.pipeline = try device.makePipeline(descriptor: pipelineDesc, shader: shader)
+        self.pipeline = try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader)
         
         // Depth Stencil State
         let depthDesc = DepthStencilDescriptor(label: "DepthState", depthCompareFunction: .less, isDepthWriteEnabled: true)
@@ -256,7 +259,6 @@ class CubeRenderer: RenderEngineDelegate {
         self.indexBuffer = iBuffer
         
         // Texture
-        let loader = RenderEngine.TextureLoader(device: device)
-        self.texture = try loader.createCheckerboardTexture()
+        self.texture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
     }
 }
