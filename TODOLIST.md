@@ -45,6 +45,8 @@
 
 ## Phase 4: 引擎封装与 Demo (Engine & Demo)
 - [ ] **RenderEngine 模块**
+    - [x] 实现 Mesh 和 Material 抽象
+    - [x] 实现 OBJ 模型加载器
     - [ ] 实现 Renderer (渲染循环)
     - [ ] 实现 RenderLayer (UIView/SwiftUI 桥接)
     - [ ] 资源管理器
@@ -53,8 +55,9 @@
     - [x] 集成 RenderEngine
     - [x] 绘制第一个三角形 (Hello Triangle)
     - [x] 绘制 3D 立方体 (Hello Cube)
+    - [x] 集成 OBJ 加载演示
 
 ## Phase 5: 进阶特性 (Advanced)
-- [ ] 3D 模型加载 (.obj)
+- [x] 3D 模型加载 (.obj)
 - [ ] 基础光照模型 (Phong/Blinn-Phong)
 - [ ] 阴影贴图 (Shadow Mapping)

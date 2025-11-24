@@ -109,6 +109,25 @@ public class MetalDevice: RenderDevice {
             desc.depthAttachmentPixelFormat = dpf
         }
 
+        // Vertex Descriptor Conversion
+        if let vd = descriptor.vertexDescriptor {
+            let mtlVD = MTLVertexDescriptor()
+            
+            for (i, attr) in vd.attributes.enumerated() {
+                mtlVD.attributes[i].format = convertVertexFormat(attr.format)
+                mtlVD.attributes[i].offset = attr.offset
+                mtlVD.attributes[i].bufferIndex = attr.bufferIndex
+            }
+            
+            for (i, layout) in vd.layouts.enumerated() {
+                mtlVD.layouts[i].stride = layout.stride
+                mtlVD.layouts[i].stepFunction = layout.stepFunction == .perVertex ? .perVertex : .perInstance
+                mtlVD.layouts[i].stepRate = layout.stepRate
+            }
+            
+            desc.vertexDescriptor = mtlVD
+        }
+
         var pipelineStateResult: MTLRenderPipelineState? = nil
         var pipelineError: Error? = nil
         
@@ -128,5 +147,15 @@ public class MetalDevice: RenderDevice {
         let state = MetalPipelineState(descriptor: descriptor, pipelineState: pipeline)
         pipelineCache.insert(descriptor, value: state)
         return state
+    }
+    
+    private func convertVertexFormat(_ format: RenderCore.VertexFormat) -> MTLVertexFormat {
+        switch format {
+        case .float: return .float
+        case .float2: return .float2
+        case .float3: return .float3
+        case .float4: return .float4
+        case .uchar4: return .uchar4
+        }
     }
 }

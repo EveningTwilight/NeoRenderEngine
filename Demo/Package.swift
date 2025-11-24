@@ -17,6 +17,9 @@ let package = Package(
                 .product(name: "RenderEngine", package: "RenderEngine"),
                 .product(name: "RenderMath", package: "RenderEngine"),
                 .product(name: "RenderCore", package: "RenderEngine")
+            ],
+            resources: [
+                .process("Resources")
             ]
         )
     ]

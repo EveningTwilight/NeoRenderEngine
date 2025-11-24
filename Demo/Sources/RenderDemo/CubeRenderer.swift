@@ -11,62 +11,6 @@ class CubeRenderer: RenderEngineDelegate {
     
     var rotationAngle: Float = 0.0
     
-    // 24 vertices (4 per face * 6 faces)
-    // Position (x, y, z) + UV (u, v)
-    let vertices: [Float] = [
-        // Front Face
-        -0.5, -0.5,  0.5,  0.0, 1.0, // 0: BL
-         0.5, -0.5,  0.5,  1.0, 1.0, // 1: BR
-         0.5,  0.5,  0.5,  1.0, 0.0, // 2: TR
-        -0.5,  0.5,  0.5,  0.0, 0.0, // 3: TL
-
-        // Back Face
-         0.5, -0.5, -0.5,  0.0, 1.0, // 4: BL (from back view)
-        -0.5, -0.5, -0.5,  1.0, 1.0, // 5: BR
-        -0.5,  0.5, -0.5,  1.0, 0.0, // 6: TR
-         0.5,  0.5, -0.5,  0.0, 0.0, // 7: TL
-
-        // Left Face
-        -0.5, -0.5, -0.5,  0.0, 1.0, // 8: BL
-        -0.5, -0.5,  0.5,  1.0, 1.0, // 9: BR
-        -0.5,  0.5,  0.5,  1.0, 0.0, // 10: TR
-        -0.5,  0.5, -0.5,  0.0, 0.0, // 11: TL
-
-        // Right Face
-         0.5, -0.5,  0.5,  0.0, 1.0, // 12: BL
-         0.5, -0.5, -0.5,  1.0, 1.0, // 13: BR
-         0.5,  0.5, -0.5,  1.0, 0.0, // 14: TR
-         0.5,  0.5,  0.5,  0.0, 0.0, // 15: TL
-
-        // Top Face
-        -0.5,  0.5,  0.5,  0.0, 1.0, // 16: BL
-         0.5,  0.5,  0.5,  1.0, 1.0, // 17: BR
-         0.5,  0.5, -0.5,  1.0, 0.0, // 18: TR
-        -0.5,  0.5, -0.5,  0.0, 0.0, // 19: TL
-
-        // Bottom Face
-        -0.5, -0.5, -0.5,  0.0, 1.0, // 20: BL
-         0.5, -0.5, -0.5,  1.0, 1.0, // 21: BR
-         0.5, -0.5,  0.5,  1.0, 0.0, // 22: TR
-        -0.5, -0.5,  0.5,  0.0, 0.0  // 23: TL
-    ]
-    
-    // Indices for 12 triangles (36 indices)
-    let indices: [UInt16] = [
-        // Front
-        0, 1, 2, 2, 3, 0,
-        // Back
-        4, 5, 6, 6, 7, 4,
-        // Left
-        8, 9, 10, 10, 11, 8,
-        // Right
-        12, 13, 14, 14, 15, 12,
-        // Top
-        16, 17, 18, 18, 19, 16,
-        // Bottom
-        20, 21, 22, 22, 23, 20
-    ]
-    
     func update(deltaTime: Double) {
         rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
     }
@@ -139,9 +83,12 @@ class CubeRenderer: RenderEngineDelegate {
     }
     
     private func setupResources(device: RenderDevice, resourceManager: ResourceManager) throws {
+        // Load Mesh
+        let mesh = try OBJLoader.load(name: "cube", bundle: Bundle.module, device: device)
+        self.mesh = mesh
+        
         // Shader Source
         let shaderSource: String
-        var vertexDescriptor: RenderCore.VertexDescriptor? = nil
         var uniformBindings: [UniformBinding] = []
         
         let isGL = String(describing: type(of: device)) == "GLDevice"
@@ -150,7 +97,8 @@ class CubeRenderer: RenderEngineDelegate {
             shaderSource = """
             #version 330 core
             layout(location = 0) in vec3 position;
-            layout(location = 1) in vec2 uv;
+            layout(location = 1) in vec3 normal;
+            layout(location = 2) in vec2 uv;
             
             uniform mat4 modelViewProjectionMatrix;
             
@@ -172,13 +120,6 @@ class CubeRenderer: RenderEngineDelegate {
             }
             """
             
-            // Setup Vertex Descriptor for GL
-            var descriptor = RenderCore.VertexDescriptor()
-            descriptor.attributes.append(RenderCore.VertexAttribute(format: .float3, offset: 0, bufferIndex: 0))
-            descriptor.attributes.append(RenderCore.VertexAttribute(format: .float2, offset: 12, bufferIndex: 0))
-            descriptor.layouts.append(RenderCore.VertexLayout(stride: 20))
-            vertexDescriptor = descriptor
-            
             // Setup Uniform Bindings
             uniformBindings.append(UniformBinding(name: "modelViewProjectionMatrix", type: .mat4, bufferIndex: 1))
             
@@ -193,7 +134,8 @@ class CubeRenderer: RenderEngineDelegate {
             
             struct VertexIn {
                 float3 position [[attribute(0)]];
-                float2 uv [[attribute(1)]];
+                float3 normal [[attribute(1)]];
+                float2 uv [[attribute(2)]];
             };
             
             struct VertexOut {
@@ -201,18 +143,11 @@ class CubeRenderer: RenderEngineDelegate {
                 float2 uv;
             };
             
-            vertex VertexOut vertex_main(const device float* vertices [[buffer(0)]],
-                                         constant Uniforms& uniforms [[buffer(1)]],
-                                         uint vertexID [[vertex_id]]) {
+            vertex VertexOut vertex_main(VertexIn in [[stage_in]],
+                                         constant Uniforms& uniforms [[buffer(1)]]) {
                 VertexOut out;
-                uint stride = 5; // 3 pos + 2 uv
-                uint offset = vertexID * stride;
-                
-                float3 pos = float3(vertices[offset], vertices[offset+1], vertices[offset+2]);
-                float2 uv = float2(vertices[offset+3], vertices[offset+4]);
-                
-                out.position = uniforms.modelViewProjectionMatrix * float4(pos, 1.0);
-                out.uv = uv;
+                out.position = uniforms.modelViewProjectionMatrix * float4(in.position, 1.0);
+                out.uv = in.uv;
                 return out;
             }
             
@@ -231,7 +166,7 @@ class CubeRenderer: RenderEngineDelegate {
         pipelineDesc.fragmentFunction = "fragment_main"
         pipelineDesc.colorPixelFormat = 80 // .bgra8Unorm
         pipelineDesc.depthPixelFormat = 252 // .depth32Float
-        pipelineDesc.vertexDescriptor = vertexDescriptor
+        pipelineDesc.vertexDescriptor = mesh.vertexDescriptor
         pipelineDesc.uniformBindings = uniformBindings
         
         self.material = Material(pipelineState: try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader))
@@ -243,8 +178,5 @@ class CubeRenderer: RenderEngineDelegate {
         // Texture
         let tex = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
         self.material?.setTexture(tex, at: 0)
-        
-        // Create Mesh
-        self.mesh = Mesh(device: device, vertices: vertices, indices: indices, vertexDescriptor: vertexDescriptor)
     }
 }
