@@ -17,12 +17,14 @@ public enum RenderBackendType {
 }
 
 public protocol RenderEngineDelegate: AnyObject {
+    func update(deltaTime: Double)
     func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor)
 }
 
 public class GraphicEngine {
     public let device: RenderDevice
     public let backendType: RenderBackendType
+    public let resourceManager: ResourceManager
     public weak var delegate: RenderEngineDelegate?
     public weak var targetLayer: CALayer?
     
@@ -30,6 +32,7 @@ public class GraphicEngine {
     private var preferredFrameRate: Int = 60
     private var commandQueue: CommandQueue
     private var depthTexture: Texture?
+    private var lastFrameTime: Double = 0
     
     #if os(iOS)
     private var displayLink: CADisplayLink?
@@ -53,11 +56,13 @@ public class GraphicEngine {
             #endif
         }
         self.commandQueue = self.device.makeCommandQueue()
+        self.resourceManager = ResourceManager(device: self.device)
     }
     
     public func startRendering() {
         guard !isRunning else { return }
         isRunning = true
+        lastFrameTime = CFAbsoluteTimeGetCurrent()
         
         #if os(iOS)
         displayLink = CADisplayLink(target: self, selector: #selector(renderFrame))
@@ -87,6 +92,13 @@ public class GraphicEngine {
     
     @objc private func renderFrame() {
         guard let delegate = delegate else { return }
+        
+        let currentTime = CFAbsoluteTimeGetCurrent()
+        let deltaTime = currentTime - lastFrameTime
+        lastFrameTime = currentTime
+        
+        // 0. Update Logic
+        delegate.update(deltaTime: deltaTime)
         
         var currentTexture: Texture?
         
