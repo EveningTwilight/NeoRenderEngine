@@ -5,25 +5,77 @@ import RenderMath
 public class SceneRenderer {
     private let device: RenderDevice
     
+    public var shadowPipeline: PipelineState?
+    public var shadowMapPass: ShadowMapPass?
+    
     public init(device: RenderDevice) {
         self.device = device
     }
     
     public func render(scene: RenderScene, camera: Camera, in commandBuffer: CommandBuffer, passDescriptor: RenderPassDescriptor) {
-        let encoder = commandBuffer.beginRenderPass(passDescriptor)
-        
         // 1. Collect Renderables and Lights
         var renderers: [MeshRenderer] = []
         var lights: [LightComponent] = []
         collectSceneObjects(from: scene.root, renderers: &renderers, lights: &lights)
         
         // Prepare Light Data (Single Light Support for now)
-        // Default to a light at (0, 10, 0) if none exists
         let mainLight = lights.first
         let lightPos = mainLight?.node?.worldPosition ?? Vec3(0, 10, 0)
         let lightColor = (mainLight?.color ?? Vec3(1, 1, 1)) * (mainLight?.intensity ?? 1.0)
         
-        // 2. Draw
+        // Calculate Light Space Matrix
+        var lightSpaceMatrix = Mat4.identity
+        if let _ = shadowMapPass {
+            // Simple orthographic projection for directional light (or simulating point light as directional for shadows)
+            // For a real point light, we'd need a cubemap shadow map.
+            // Here we assume directional shadow for simplicity or a focused spot.
+            let lightProjection = Mat4.orthographic(left: -10, right: 10, bottom: -10, top: 10, near: 1.0, far: 20.0)
+            let lightView = Mat4.lookAt(eye: lightPos, center: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
+            lightSpaceMatrix = lightProjection * lightView
+        }
+        
+        // 2. Shadow Pass
+        if let shadowPass = shadowMapPass, let shadowPipeline = shadowPipeline {
+            let shadowEncoder = commandBuffer.beginRenderPass(shadowPass.passDescriptor)
+            shadowEncoder.setPipeline(shadowPipeline)
+            
+            for renderer in renderers {
+                guard let node = renderer.node else { continue }
+                let modelMatrix = node.worldMatrix
+                
+                // We need to bind uniforms for Shadow Shader
+                // Assuming Shadow Shader uses buffer index 1 for uniforms
+                // Struct: { lightSpaceMatrix, modelMatrix }
+                
+                // We need a way to bind these. The Material system is for the main pass.
+                // We can create a temporary buffer or use a "ShadowMaterial" concept.
+                // For simplicity, we'll assume the shadow pipeline reflection allows us to bind by index or name.
+                // But we don't have a Material for the shadow pass.
+                // We'll manually bind buffers.
+                
+                // Create a temporary buffer for uniforms
+                // Layout: lightSpaceMatrix (64), modelMatrix (64)
+                let bufferSize = 128
+                let uniformBuffer = device.makeBuffer(length: bufferSize)
+                let ptr = uniformBuffer.contents()
+                ptr.storeBytes(of: lightSpaceMatrix, toByteOffset: 0, as: Mat4.self)
+                ptr.storeBytes(of: modelMatrix, toByteOffset: 64, as: Mat4.self)
+                
+                shadowEncoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
+                
+                let mesh = renderer.mesh
+                shadowEncoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
+                
+                if let indexBuffer = mesh.indexBuffer {
+                    shadowEncoder.drawIndexed(indexCount: mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: mesh.indexType)
+                }
+            }
+            shadowEncoder.endEncoding()
+        }
+        
+        // 3. Main Pass
+        let encoder = commandBuffer.beginRenderPass(passDescriptor)
+        
         let viewMatrix = camera.viewMatrix
         let projectionMatrix = camera.projectionMatrix
         
@@ -51,6 +103,12 @@ public class SceneRenderer {
             // Light Uniforms
             material.setValue(Vec4(lightPos.x, lightPos.y, lightPos.z, 1.0), for: "lightPos")
             material.setValue(Vec4(lightColor.x, lightColor.y, lightColor.z, 1.0), for: "lightColor")
+            
+            // Shadow Uniforms
+            if let shadowPass = shadowMapPass {
+                material.setValue(lightSpaceMatrix, for: "lightSpaceMatrix")
+                material.setTexture(shadowPass.shadowTexture, for: "shadowMap")
+            }
             
             // Update buffers
             material.updateUniforms(device: device)

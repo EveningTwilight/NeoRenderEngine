@@ -144,7 +144,32 @@ class SceneGraphViewModel: ObservableObject {
             
             scene.addNode(cameraNode)
             
-            // 5. Bind to Engine
+            // 5. Setup Shadows
+            // Load Shadow Shader
+            let shadowShaderSource = try loadShaderSource(name: "ShadowShader", ext: "metal")
+            let shadowShader = try resourceManager.createShader(name: "ShadowShader", source: shadowShaderSource)
+            
+            // Create Shadow Pipeline
+            var shadowPipelineDesc = PipelineDescriptor(label: "ShadowPipeline")
+            shadowPipelineDesc.vertexFunction = "vertex_main"
+            shadowPipelineDesc.fragmentFunction = nil // Shadow pass is depth-only usually, or void fragment
+            // Metal requires a fragment function if we want to output to color, but for depth-only we can omit it?
+            // Actually, if we only write depth, we don't need a fragment function.
+            // But we need to check if our RenderPass has color attachments. ShadowMapPass has none.
+            // So fragmentFunction can be nil.
+            shadowPipelineDesc.depthPixelFormat = .depth32Float
+            shadowPipelineDesc.vertexDescriptor = mesh.vertexDescriptor // Reuse mesh descriptor
+            
+            let shadowPipeline = try resourceManager.createPipeline(name: "ShadowPipeline", descriptor: shadowPipelineDesc, shader: shadowShader)
+            
+            // Create Shadow Map Pass
+            let shadowMapPass = ShadowMapPass(device: device, width: 2048, height: 2048)
+            
+            // Configure SceneRenderer
+            engine.sceneRenderer.shadowPipeline = shadowPipeline
+            engine.sceneRenderer.shadowMapPass = shadowMapPass
+            
+            // 6. Bind to Engine
             engine.scene = scene
             engine.camera = camera
             

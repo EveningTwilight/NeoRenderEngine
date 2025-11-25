@@ -36,7 +36,7 @@ public class GraphicEngine {
     // Scene Graph Support
     public var scene: RenderScene?
     public var camera: Camera?
-    private lazy var sceneRenderer: SceneRenderer = {
+    public lazy var sceneRenderer: SceneRenderer = {
         return SceneRenderer(device: self.device)
     }()
     
