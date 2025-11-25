@@ -166,6 +166,24 @@ class CubeRenderer: RenderEngineDelegate {
         material?.updateUniforms(device: device)
     }
     
+    private func loadShaderSource(name: String, ext: String, subdirectory: String?) throws -> String {
+        // Try to find the resource with subdirectory
+        if let url = Bundle.module.url(forResource: name, withExtension: ext, subdirectory: subdirectory) {
+            return try String(contentsOf: url, encoding: .utf8)
+        }
+        // Fallback: Try to find the resource at root or with path in name
+        let path = subdirectory != nil ? "\(subdirectory!)/\(name)" : name
+        if let url = Bundle.module.url(forResource: path, withExtension: ext) {
+            return try String(contentsOf: url, encoding: .utf8)
+        }
+        // Fallback: Try just the name
+        if let url = Bundle.module.url(forResource: name, withExtension: ext) {
+            return try String(contentsOf: url, encoding: .utf8)
+        }
+        
+        throw NSError(domain: "CubeRenderer", code: -1, userInfo: [NSLocalizedDescriptionKey: "Shader file '\(name).\(ext)' not found in bundle"])
+    }
+
     private func setupResources(device: RenderDevice, resourceManager: ResourceManager) throws {
         // Load Mesh
         let mesh = try OBJLoader.load(name: "cube", bundle: Bundle.module, device: device)
@@ -255,7 +273,8 @@ class CubeRenderer: RenderEngineDelegate {
             
         } else {
             // Metal: Load from file
-            let shader = try resourceManager.loadShader(name: "CubeShader", fileName: "Shaders/CubeShader.metal", bundle: Bundle.module)
+            let source = try loadShaderSource(name: "CubeShader", ext: "metal", subdirectory: "Shaders")
+            let shader = try resourceManager.createShader(name: "CubeShader", source: source)
             
             var pipelineDesc = PipelineDescriptor(label: "CubePipeline")
             pipelineDesc.vertexFunction = "vertex_main"
@@ -278,7 +297,8 @@ class CubeRenderer: RenderEngineDelegate {
     }
     
     private func setupShadowResources(device: RenderDevice, resourceManager: ResourceManager) throws {
-        let shader = try resourceManager.loadShader(name: "ShadowShader", fileName: "Shaders/ShadowShader.metal", bundle: Bundle.module)
+        let source = try loadShaderSource(name: "ShadowShader", ext: "metal", subdirectory: "Shaders")
+        let shader = try resourceManager.createShader(name: "ShadowShader", source: source)
         
         var pipelineDesc = PipelineDescriptor(label: "ShadowPipeline")
         pipelineDesc.vertexFunction = "vertex_main"
