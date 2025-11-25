@@ -67,11 +67,11 @@
 ## Phase 6: 优化与扩展 (Optimization & Extension)
 - [ ] **Shader 系统增强**
     - [x] Shader 反射与自动化绑定 (Reflection & Auto-binding)
-    - [ ] Shader 库加载 (.metallib) 支持
-    - [ ] Shader 包含机制 (#include)
+    - [x] Shader 库加载 (.metallib) 支持
+    - [x] Shader 包含机制 (#include)
 - [ ] **渲染质量优化**
     - [x] PCF 柔化阴影
-    - [ ] 阴影 Bias 自适应
+    - [x] 阴影 Bias 自适应
 - [ ] **场景管理**
     - [ ] 场景图 (Scene Graph) 基础节点
     - [ ] 组件化架构 (Component System)

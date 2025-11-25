@@ -71,7 +71,8 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     
     float currentDepth = projCoords.z;
     float shadow = 0.0;
-    float bias = 0.005;
+    // Adaptive bias based on surface angle to light
+    float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
     
     if (currentDepth <= 1.0) {
         // PCF (Percentage-Closer Filtering)
