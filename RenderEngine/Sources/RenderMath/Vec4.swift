@@ -50,4 +50,8 @@ public struct Vec4: Equatable, Hashable {
     public static func * (lhs: Vec4, rhs: Float) -> Vec4 {
         return Vec4(storage: lhs.storage * rhs)
     }
+    
+    public func toArray() -> [Float] {
+        return [storage.x, storage.y, storage.z, storage.w]
+    }
 }

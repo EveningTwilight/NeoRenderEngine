@@ -68,19 +68,37 @@ public struct PipelineDescriptor: Hashable {
     }
 }
 
+public struct ShaderStructMember: Hashable {
+    public var name: String
+    public var type: UniformType
+    public var offset: Int
+    public var size: Int
+    
+    public init(name: String, type: UniformType, offset: Int, size: Int) {
+        self.name = name
+        self.type = type
+        self.offset = offset
+        self.size = size
+    }
+}
+
 public struct ShaderArgument: Hashable {
     public var name: String
     public var type: UniformType
     public var bufferIndex: Int
     public var textureIndex: Int
     public var isActive: Bool
+    public var bufferSize: Int
+    public var members: [String: ShaderStructMember]
     
-    public init(name: String, type: UniformType, bufferIndex: Int = -1, textureIndex: Int = -1, isActive: Bool = true) {
+    public init(name: String, type: UniformType, bufferIndex: Int = -1, textureIndex: Int = -1, isActive: Bool = true, bufferSize: Int = 0, members: [String: ShaderStructMember] = [:]) {
         self.name = name
         self.type = type
         self.bufferIndex = bufferIndex
         self.textureIndex = textureIndex
         self.isActive = isActive
+        self.bufferSize = bufferSize
+        self.members = members
     }
 }
 

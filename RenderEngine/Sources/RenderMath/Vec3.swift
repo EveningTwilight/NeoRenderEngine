@@ -69,6 +69,10 @@ public struct Vec3: Equatable, Hashable {
         return self + (other - self) * t
     }
     
+    public func toArray() -> [Float] {
+        return [storage.x, storage.y, storage.z]
+    }
+    
     public static func + (lhs: Vec3, rhs: Vec3) -> Vec3 {
         return Vec3(storage: lhs.storage + rhs.storage)
     }

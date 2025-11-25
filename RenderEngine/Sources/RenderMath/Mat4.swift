@@ -133,4 +133,16 @@ public struct Mat4: Equatable {
     public static func * (lhs: Mat4, rhs: Mat4) -> Mat4 {
         return Mat4(storage: lhs.storage * rhs.storage)
     }
+    
+    public func toArray() -> [Float] {
+        var array = [Float](repeating: 0, count: 16)
+        withUnsafePointer(to: storage) { ptr in
+            ptr.withMemoryRebound(to: Float.self, capacity: 16) { floatPtr in
+                for i in 0..<16 {
+                    array[i] = floatPtr[i]
+                }
+            }
+        }
+        return array
+    }
 }

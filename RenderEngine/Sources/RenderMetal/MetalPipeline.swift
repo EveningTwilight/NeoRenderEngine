@@ -40,16 +40,43 @@ public class MetalPipelineState: PipelineState {
         let type: UniformType = .float // Default/Placeholder
         var bufferIndex = -1
         var textureIndex = -1
+        var bufferSize = 0
+        var members: [String: ShaderStructMember] = [:]
         
         switch arg.type {
         case .buffer:
             bufferIndex = arg.index
+            bufferSize = arg.bufferDataSize
+            if let structType = arg.bufferStructType {
+                members = parseStruct(structType)
+            }
         case .texture:
             textureIndex = arg.index
         default:
             return nil
         }
         
-        return ShaderArgument(name: arg.name, type: type, bufferIndex: bufferIndex, textureIndex: textureIndex, isActive: arg.isActive)
+        return ShaderArgument(name: arg.name, type: type, bufferIndex: bufferIndex, textureIndex: textureIndex, isActive: arg.isActive, bufferSize: bufferSize, members: members)
+    }
+    
+    private static func parseStruct(_ structType: MTLStructType) -> [String: ShaderStructMember] {
+        var members: [String: ShaderStructMember] = [:]
+        for member in structType.members {
+            let type = convertDataType(member.dataType)
+            let shaderMember = ShaderStructMember(name: member.name, type: type, offset: member.offset, size: 0) // Size might need more logic if needed, but offset is key
+            members[member.name] = shaderMember
+        }
+        return members
+    }
+    
+    private static func convertDataType(_ dataType: MTLDataType) -> UniformType {
+        switch dataType {
+        case .float: return .float
+        case .float2: return .float2
+        case .float3: return .float3
+        case .float4: return .float4
+        case .float4x4: return .mat4
+        default: return .float // Fallback
+        }
     }
 }
