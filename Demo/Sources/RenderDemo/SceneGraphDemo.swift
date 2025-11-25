@@ -59,8 +59,9 @@ class SceneGraphViewModel: ObservableObject {
             let device = engine.device
             let resourceManager = engine.resourceManager
             
-            // Load Mesh
-            let mesh = try OBJLoader.load(name: "cube", bundle: Bundle.module, device: device)
+            // Load Meshes
+            let cubeMesh = PrimitiveMesh.createCube(device: device, size: 1.0)
+            let planeMesh = PrimitiveMesh.createPlane(device: device, size: 10.0)
             
             // Load Shader
             let shaderSource = try loadShaderSource(name: "SimpleShader", ext: "metal")
@@ -72,74 +73,100 @@ class SceneGraphViewModel: ObservableObject {
             pipelineDesc.fragmentFunction = "fragment_main"
             pipelineDesc.colorPixelFormat = .bgra8Unorm
             pipelineDesc.depthPixelFormat = .depth32Float
-            pipelineDesc.vertexDescriptor = mesh.vertexDescriptor
-            
-            // Define Uniform Bindings (for reflection/auto-binding)
-            // Note: In a real app, reflection would handle this, but we define it for clarity if needed.
-            // The Material system uses reflection from the PipelineState.
+            pipelineDesc.vertexDescriptor = cubeMesh.vertexDescriptor
             
             let pipelineState = try resourceManager.createPipeline(name: "SimplePipeline", descriptor: pipelineDesc, shader: shader)
-            let material = Material(pipelineState: pipelineState)
             
             // Setup Depth State
             let depthDesc = DepthStencilDescriptor(label: "DepthState", depthCompareFunction: .less, isDepthWriteEnabled: true)
-            material.depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
+            let depthState = device.makeDepthStencilState(descriptor: depthDesc)
             
             // Load Textures
-            let diffuseTexture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
-            material.setTexture(diffuseTexture, for: "diffuseMap")
-            
-            // Create Specular Map (using a different checkerboard pattern)
+            let checkerTexture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
             let specularTexture = try resourceManager.createCheckerboardTexture(name: "SpecularMap", size: 256, segments: 4)
-            material.setTexture(specularTexture, for: "specularMap")
             
-            // Set Static Uniforms
-            // material.setValue(Vec4(2.0, 4.0, 2.0, 1.0), for: "lightPos") // Now handled by LightComponent
-            // material.setValue(Vec4(1.0, 1.0, 1.0, 1.0), for: "lightColor") // Now handled by LightComponent
-            material.setValue(Vec4(1.0, 0.5, 0.31, 1.0), for: "objectColor")
+            // --- Materials ---
+            
+            // 1. Floor Material (Matte, Tiled)
+            let floorMaterial = Material(pipelineState: pipelineState)
+            floorMaterial.depthStencilState = depthState
+            floorMaterial.setTexture(checkerTexture, for: "diffuseMap")
+            floorMaterial.setTexture(specularTexture, for: "specularMap") // Low specular
+            floorMaterial.setValue(Vec4(0.8, 0.8, 0.8, 1.0), for: "objectColor")
+            
+            // 2. Center Cube Material (Shiny Red)
+            let cubeMaterial = Material(pipelineState: pipelineState)
+            cubeMaterial.depthStencilState = depthState
+            cubeMaterial.setTexture(checkerTexture, for: "diffuseMap")
+            cubeMaterial.setTexture(specularTexture, for: "specularMap")
+            cubeMaterial.setValue(Vec4(1.0, 0.3, 0.3, 1.0), for: "objectColor")
+            
+            // 3. Pillar Material (Blueish)
+            let pillarMaterial = Material(pipelineState: pipelineState)
+            pillarMaterial.depthStencilState = depthState
+            pillarMaterial.setTexture(checkerTexture, for: "diffuseMap")
+            pillarMaterial.setTexture(specularTexture, for: "specularMap")
+            pillarMaterial.setValue(Vec4(0.3, 0.3, 1.0, 1.0), for: "objectColor")
             
             // 4. Build Scene Graph
             
+            // Floor
+            let floorNode = Node(name: "Floor")
+            floorNode.addComponent(MeshRenderer(mesh: planeMesh, material: floorMaterial))
+            scene.addNode(floorNode)
+            
+            // Center Cube
+            let cubeNode = Node(name: "CenterCube")
+            cubeNode.transform.position = Vec3(0, 1.0, 0) // Lift up
+            cubeNode.addComponent(MeshRenderer(mesh: cubeMesh, material: cubeMaterial))
+            
+            let rotator = RotatorComponent()
+            rotator.speed = 1.0
+            rotator.axis = Vec3(0.5, 1.0, 0.0).normalized()
+            cubeNode.addComponent(rotator)
+            scene.addNode(cubeNode)
+            
+            // Pillars
+            let pillarPositions = [
+                Vec3(-3, 1, -3),
+                Vec3( 3, 1, -3),
+                Vec3( 3, 1,  3),
+                Vec3(-3, 1,  3)
+            ]
+            
+            for (i, pos) in pillarPositions.enumerated() {
+                let pillar = Node(name: "Pillar_\(i)")
+                pillar.transform.position = pos
+                pillar.transform.scale = Vec3(0.5, 2.0, 0.5)
+                pillar.addComponent(MeshRenderer(mesh: cubeMesh, material: pillarMaterial))
+                scene.addNode(pillar)
+            }
+            
             // Light Node
             let lightNode = Node(name: "Light")
-            lightNode.transform.position = Vec3(2.0, 4.0, 2.0)
-            let lightComp = LightComponent(type: .point, color: Vec3(1, 1, 1), intensity: 1.0)
+            lightNode.transform.position = Vec3(4.0, 5.0, 4.0)
+            let lightComp = LightComponent(type: .point, color: Vec3(1, 1, 1), intensity: 1.5)
             lightNode.addComponent(lightComp)
             
             // Make the light orbit
             let lightRotator = RotatorComponent()
-            lightRotator.speed = 0.5
+            lightRotator.speed = 0.8
             lightRotator.axis = Vec3(0, 1, 0)
-            // To orbit, we need a parent that rotates, or a custom orbiter.
-            // RotatorComponent rotates the node itself. If the node is at (0,0,0), it rotates in place.
-            // If the node is at (2,4,2), rotating it in place changes its orientation, not position.
-            // To orbit, we can attach it to a pivot node.
             
             let lightPivot = Node(name: "LightPivot")
             lightPivot.addComponent(lightRotator)
             lightPivot.addChild(lightNode)
             scene.addNode(lightPivot)
             
-            // Cube Node
-            let cubeNode = Node(name: "Cube")
-            cubeNode.addComponent(MeshRenderer(mesh: mesh, material: material))
-            
-            // Add Rotator Component
-            let rotator = RotatorComponent()
-            rotator.speed = 1.0
-            rotator.axis = Vec3(0.5, 1.0, 0.0).normalized()
-            cubeNode.addComponent(rotator)
-            
-            scene.addNode(cubeNode)
-            
             // Camera Node
-            let camera = PerspectiveCamera(position: Vec3(0, 0, 5), target: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
+            let camera = PerspectiveCamera(position: Vec3(0, 5, 10), target: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
             let cameraNode = Node(name: "Camera")
             cameraNode.addComponent(CameraComponent(camera: camera))
             
             // Add Camera Controller
             let controller = CameraControllerComponent()
-            controller.distance = 5.0
+            controller.distance = 10.0
+            controller.pitch = -0.5 // Look down slightly
             cameraNode.addComponent(controller)
             
             scene.addNode(cameraNode)
@@ -152,13 +179,9 @@ class SceneGraphViewModel: ObservableObject {
             // Create Shadow Pipeline
             var shadowPipelineDesc = PipelineDescriptor(label: "ShadowPipeline")
             shadowPipelineDesc.vertexFunction = "vertex_main"
-            shadowPipelineDesc.fragmentFunction = nil // Shadow pass is depth-only usually, or void fragment
-            // Metal requires a fragment function if we want to output to color, but for depth-only we can omit it?
-            // Actually, if we only write depth, we don't need a fragment function.
-            // But we need to check if our RenderPass has color attachments. ShadowMapPass has none.
-            // So fragmentFunction can be nil.
+            shadowPipelineDesc.fragmentFunction = nil 
             shadowPipelineDesc.depthPixelFormat = .depth32Float
-            shadowPipelineDesc.vertexDescriptor = mesh.vertexDescriptor // Reuse mesh descriptor
+            shadowPipelineDesc.vertexDescriptor = cubeMesh.vertexDescriptor // Reuse mesh descriptor
             
             let shadowPipeline = try resourceManager.createPipeline(name: "ShadowPipeline", descriptor: shadowPipelineDesc, shader: shadowShader)
             
