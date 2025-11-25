@@ -11,6 +11,10 @@ public class RenderScene {
         root.update(deltaTime: deltaTime)
     }
     
+    public func handleInput(_ event: InputEvent) {
+        root.handleInput(event)
+    }
+    
     public func addNode(_ node: Node) {
         root.addChild(node)
     }

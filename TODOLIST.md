@@ -73,6 +73,8 @@
     - [x] PCF 柔化阴影
     - [x] 阴影 Bias 自适应
 - [x] **场景管理**
-    - [x] 场景图 (Scene Graph) 基础节点
-    - [x] 组件化架构 (Component System)
+  - [x] 场景图 (Scene Graph) 基础节点
+  - [x] 组件化架构 (Component System)
+  - [x] 渲染循环集成 (SceneRenderer)
+  - [x] 交互系统集成 (Input System Integration)
 

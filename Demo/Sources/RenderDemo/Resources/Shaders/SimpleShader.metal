@@ -35,7 +35,8 @@ vertex VertexOut vertex_main(VertexIn in [[stage_in]],
 
 fragment float4 fragment_main(VertexOut in [[stage_in]],
                               constant Uniforms& uniforms [[buffer(1)]],
-                              texture2d<float> texture [[texture(0)]]) {
+                              texture2d<float> diffuseMap [[texture(0)]],
+                              texture2d<float> specularMap [[texture(1)]]) {
     constexpr sampler textureSampler (mag_filter::linear, min_filter::linear);
     
     // Ambient
@@ -49,14 +50,16 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     float3 diffuse = diff * uniforms.lightColor.rgb;
     
     // Specular
-    float specularStrength = 0.5;
+    // Sample specular intensity from specular map (use red channel)
+    float specularStrength = specularMap.sample(textureSampler, in.uv).r;
+    
     float3 viewDir = normalize(uniforms.viewPos.rgb - in.fragPos);
     float3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     float3 specular = specularStrength * spec * uniforms.lightColor.rgb;
     
     float3 result = (ambient + diffuse + specular) * uniforms.objectColor.rgb;
-    float4 texColor = texture.sample(textureSampler, in.uv);
+    float4 texColor = diffuseMap.sample(textureSampler, in.uv);
     
     return float4(result, 1.0) * texColor;
 }

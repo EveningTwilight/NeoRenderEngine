@@ -30,6 +30,18 @@ public struct Quaternion: Equatable {
         self.z = cx * cy * sz - sx * sy * cz
     }
     
+    public init(angle: Float, axis: Vec3) {
+        let halfAngle = angle * 0.5
+        let s = sin(halfAngle)
+        let c = cos(halfAngle)
+        let n = axis.normalized()
+        
+        self.x = n.x * s
+        self.y = n.y * s
+        self.z = n.z * s
+        self.w = c
+    }
+    
     internal func toSIMDMatrix() -> simd_float4x4 {
         let xx = x * x
         let yy = y * y

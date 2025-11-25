@@ -70,6 +70,16 @@ public class Node {
         }
     }
     
+    public func handleInput(_ event: InputEvent) {
+        for component in components {
+            component.handleInput(event)
+        }
+        
+        for child in children {
+            child.handleInput(event)
+        }
+    }
+    
     // MARK: - Transform Helpers
     
     public var worldMatrix: Mat4 {

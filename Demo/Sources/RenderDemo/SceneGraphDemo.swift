@@ -85,9 +85,13 @@ class SceneGraphViewModel: ObservableObject {
             let depthDesc = DepthStencilDescriptor(label: "DepthState", depthCompareFunction: .less, isDepthWriteEnabled: true)
             material.depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
             
-            // Load Texture
-            let texture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
-            material.setTexture(texture, at: 0)
+            // Load Textures
+            let diffuseTexture = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
+            material.setTexture(diffuseTexture, for: "diffuseMap")
+            
+            // Create Specular Map (using a different checkerboard pattern)
+            let specularTexture = try resourceManager.createCheckerboardTexture(name: "SpecularMap", size: 256, segments: 4)
+            material.setTexture(specularTexture, for: "specularMap")
             
             // Set Static Uniforms
             // material.setValue(Vec4(2.0, 4.0, 2.0, 1.0), for: "lightPos") // Now handled by LightComponent

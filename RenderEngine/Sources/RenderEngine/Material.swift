@@ -19,6 +19,14 @@ public class Material {
         textures[index] = texture
     }
     
+    public func setTexture(_ texture: Texture, for name: String) {
+        if let index = getBindingIndex(forName: name) {
+            setTexture(texture, at: index)
+        } else {
+            print("Warning: Texture parameter '\(name)' not found in shader reflection.")
+        }
+    }
+    
     public func setValue(_ value: Float, for name: String) { properties[name] = value }
     public func setValue(_ value: Vec2, for name: String) { properties[name] = value }
     public func setValue(_ value: Vec3, for name: String) { properties[name] = value }

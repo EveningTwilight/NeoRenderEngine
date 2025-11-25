@@ -33,6 +33,13 @@ public class GraphicEngine {
     public weak var delegate: RenderEngineDelegate?
     public weak var targetLayer: CALayer?
     
+    // Scene Graph Support
+    public var scene: RenderScene?
+    public var camera: Camera?
+    private lazy var sceneRenderer: SceneRenderer = {
+        return SceneRenderer(device: self.device)
+    }()
+    
     private var isRunning: Bool = false
     private var preferredFrameRate: Int = 60
     private var commandQueue: CommandQueue
@@ -65,7 +72,11 @@ public class GraphicEngine {
     }
     
     public func handleInput(_ event: InputEvent) {
-        delegate?.handleInput(event)
+        if let delegate = delegate {
+            delegate.handleInput(event)
+        } else {
+            scene?.handleInput(event)
+        }
     }
     
     public func startRendering() {
@@ -100,14 +111,16 @@ public class GraphicEngine {
     }
     
     @objc private func renderFrame() {
-        guard let delegate = delegate else { return }
-        
         let currentTime = CFAbsoluteTimeGetCurrent()
         let deltaTime = currentTime - lastFrameTime
         lastFrameTime = currentTime
         
         // 0. Update Logic
-        delegate.update(deltaTime: deltaTime)
+        if let delegate = delegate {
+            delegate.update(deltaTime: deltaTime)
+        } else {
+            scene?.update(deltaTime: deltaTime)
+        }
         
         var currentTexture: Texture?
         
@@ -150,8 +163,12 @@ public class GraphicEngine {
         // 3. Create CommandBuffer
         let commandBuffer = commandQueue.makeCommandBuffer()
         
-        // 4. Notify Delegate to Draw
-        delegate.draw(in: self, commandBuffer: commandBuffer, renderPassDescriptor: passDescriptor)
+        // 4. Draw
+        if let delegate = delegate {
+            delegate.draw(in: self, commandBuffer: commandBuffer, renderPassDescriptor: passDescriptor)
+        } else if let scene = scene, let camera = camera {
+            sceneRenderer.render(scene: scene, camera: camera, in: commandBuffer, passDescriptor: passDescriptor)
+        }
         
         // 5. Present and Commit
         commandBuffer.present(texture)

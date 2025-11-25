@@ -7,6 +7,7 @@ open class Component {
     
     open func start() {}
     open func update(deltaTime: Double) {}
+    open func handleInput(_ event: InputEvent) {}
     open func onAttach() {}
     open func onDetach() {}
 }
