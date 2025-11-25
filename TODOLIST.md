@@ -70,7 +70,7 @@
     - [ ] Shader 库加载 (.metallib) 支持
     - [ ] Shader 包含机制 (#include)
 - [ ] **渲染质量优化**
-    - [ ] PCF 柔化阴影
+    - [x] PCF 柔化阴影
     - [ ] 阴影 Bias 自适应
 - [ ] **场景管理**
     - [ ] 场景图 (Scene Graph) 基础节点

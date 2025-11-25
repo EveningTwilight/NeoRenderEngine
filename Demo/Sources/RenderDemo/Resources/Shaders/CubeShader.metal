@@ -71,13 +71,18 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     
     float currentDepth = projCoords.z;
     float shadow = 0.0;
-    float closestDepth = 1.0;
+    float bias = 0.005;
     
     if (currentDepth <= 1.0) {
-        closestDepth = shadowMap.sample(shadowSampler, uv);
-        if (currentDepth > closestDepth + 0.005) {
-            shadow = 1.0;
+        // PCF (Percentage-Closer Filtering)
+        float2 texelSize = 1.0 / float2(shadowMap.get_width(), shadowMap.get_height());
+        for(int x = -1; x <= 1; ++x) {
+            for(int y = -1; y <= 1; ++y) {
+                float pcfDepth = shadowMap.sample(shadowSampler, uv + float2(x, y) * texelSize);
+                shadow += currentDepth > pcfDepth + bias ? 1.0 : 0.0;
+            }
         }
+        shadow /= 9.0;
     }
     
     float3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * uniforms.objectColor.rgb;
