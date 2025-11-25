@@ -59,6 +59,42 @@ public class TextureLoader {
         return texture
     }
     
+    public func createProceduralSkybox(size: Int = 512) throws -> Texture {
+        let descriptor = TextureDescriptor(width: size, height: size, pixelFormat: .bgra8Unorm, usage: [.shaderRead, .cpuWrite], textureType: .typeCube)
+        let texture = device.makeTexture(descriptor: descriptor)
+        
+        let bytesPerPixel = 4
+        let bytesPerRow = size * bytesPerPixel
+        
+        // Generate 6 faces
+        for slice in 0..<6 {
+            var data = Data(count: size * size * bytesPerPixel)
+            data.withUnsafeMutableBytes { (ptr: UnsafeMutableRawBufferPointer) in
+                let buffer = ptr.bindMemory(to: UInt8.self)
+                for i in 0..<(size * size) {
+                    let offset = i * bytesPerPixel
+                    
+                    // Simple star field
+                    let isStar = Int.random(in: 0...1000) > 998
+                    let starIntensity = isStar ? UInt8.random(in: 200...255) : 0
+                    
+                    // Dark blue background
+                    let r: UInt8 = starIntensity
+                    let g: UInt8 = starIntensity
+                    let b: UInt8 = starIntensity > 0 ? starIntensity : 20 
+                    
+                    buffer[offset] = b     // B
+                    buffer[offset + 1] = g // G
+                    buffer[offset + 2] = r // R
+                    buffer[offset + 3] = 255 // A
+                }
+            }
+            try texture.upload(data: data, bytesPerRow: bytesPerRow, slice: slice)
+        }
+        
+        return texture
+    }
+    
     private func createTexture(from cgImage: CGImage) throws -> Texture {
         let width = cgImage.width
         let height = cgImage.height

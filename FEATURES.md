@@ -34,6 +34,7 @@
 | 资源管理 | ✅ 已完成 | 纹理、模型、Shader资源的加载与缓存 |
 | 材质系统 (Material System) | ✅ 已完成 | 支持多纹理(Diffuse/Specular)、参数自动绑定 |
 | 阴影映射 (Shadow Mapping) | ✅ 已完成 | 集成至 Scene Graph，支持 PCF 柔化阴影 |
+| 天空盒 (Skybox) | ✅ 已完成 | 支持 Cubemap 纹理与程序化生成，独立渲染 Pass |
 | 渲染循环 | ✅ 已完成 | DisplayLink/Timer 驱动，集成 Scene Graph |
 | 交互层 | ✅ 已完成 | SwiftUI/UIKit/AppKit 桥接，Scene Graph 事件分发 |
 

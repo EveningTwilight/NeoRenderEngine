@@ -19,7 +19,7 @@ let package = Package(
                 .product(name: "RenderCore", package: "RenderEngine")
             ],
             resources: [
-                .process("Resources")
+                .copy("Resources")
             ]
         )
     ]

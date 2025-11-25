@@ -192,7 +192,26 @@ class SceneGraphViewModel: ObservableObject {
             engine.sceneRenderer.shadowPipeline = shadowPipeline
             engine.sceneRenderer.shadowMapPass = shadowMapPass
             
-            // 6. Bind to Engine
+            // 6. Setup Skybox
+            let skyboxShaderSource = try loadShaderSource(name: "SkyboxShader", ext: "metal")
+            let skyboxShader = try resourceManager.createShader(name: "SkyboxShader", source: skyboxShaderSource)
+            
+            let skyboxTexture = try resourceManager.createProceduralSkybox(name: "Skybox", size: 512)
+            let skybox = Skybox(device: device, texture: skyboxTexture)
+            
+            var skyboxPipelineDesc = PipelineDescriptor(label: "SkyboxPipeline")
+            skyboxPipelineDesc.vertexFunction = "vertex_main"
+            skyboxPipelineDesc.fragmentFunction = "fragment_main"
+            skyboxPipelineDesc.colorPixelFormat = .bgra8Unorm
+            skyboxPipelineDesc.depthPixelFormat = .depth32Float
+            skyboxPipelineDesc.vertexDescriptor = skybox.mesh.vertexDescriptor
+            
+            let skyboxPipeline = try resourceManager.createPipeline(name: "SkyboxPipeline", descriptor: skyboxPipelineDesc, shader: skyboxShader)
+            skybox.pipelineState = skyboxPipeline
+            
+            engine.sceneRenderer.skybox = skybox
+            
+            // 7. Bind to Engine
             engine.scene = scene
             engine.camera = camera
             

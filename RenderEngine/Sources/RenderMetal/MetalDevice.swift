@@ -35,6 +35,12 @@ public class MetalDevice: RenderDevice {
         mtlDesc.pixelFormat = convertPixelFormat(descriptor.pixelFormat)
         mtlDesc.usage = convertTextureUsage(descriptor.usage)
         
+        if descriptor.textureType == .typeCube {
+            mtlDesc.textureType = .typeCube
+        } else {
+            mtlDesc.textureType = .type2D
+        }
+        
         // Handle CPU Read/Write access
         if descriptor.usage.contains(.cpuRead) || descriptor.usage.contains(.cpuWrite) {
             #if os(macOS)

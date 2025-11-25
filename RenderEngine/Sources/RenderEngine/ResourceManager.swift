@@ -36,6 +36,16 @@ public class ResourceManager {
         return texture
     }
     
+    public func createProceduralSkybox(name: String, size: Int = 512) throws -> Texture {
+        if let texture = textures[name] {
+            return texture
+        }
+        
+        let texture = try textureLoader.createProceduralSkybox(size: size)
+        textures[name] = texture
+        return texture
+    }
+    
     public func getTexture(name: String) -> Texture? {
         return textures[name]
     }

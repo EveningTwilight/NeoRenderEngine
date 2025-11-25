@@ -7,6 +7,8 @@ public class SceneRenderer {
     
     public var shadowPipeline: PipelineState?
     public var shadowMapPass: ShadowMapPass?
+    public var skybox: Skybox?
+    private var skyboxDepthState: DepthStencilState?
     
     public init(device: RenderDevice) {
         self.device = device
@@ -123,6 +125,38 @@ public class SceneRenderer {
             // Draw
             if let indexBuffer = mesh.indexBuffer {
                 encoder.drawIndexed(indexCount: mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: mesh.indexType)
+            }
+        }
+        
+        // 4. Skybox Pass
+        if let skybox = skybox, let pipeline = skybox.pipelineState {
+            // Create Depth State if needed
+            if skyboxDepthState == nil {
+                let desc = DepthStencilDescriptor(label: "SkyboxDepth", depthCompareFunction: .lessEqual, isDepthWriteEnabled: false)
+                skyboxDepthState = device.makeDepthStencilState(descriptor: desc)
+            }
+            
+            encoder.setPipeline(pipeline)
+            encoder.setDepthStencilState(skyboxDepthState!)
+            
+            // Bind Uniforms (View/Projection)
+            // Struct: { viewMatrix, projectionMatrix }
+            let bufferSize = 128
+            let uniformBuffer = device.makeBuffer(length: bufferSize)
+            let ptr = uniformBuffer.contents()
+            ptr.storeBytes(of: viewMatrix, toByteOffset: 0, as: Mat4.self)
+            ptr.storeBytes(of: projectionMatrix, toByteOffset: 64, as: Mat4.self)
+            
+            encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
+            
+            // Bind Texture
+            encoder.setFragmentTexture(skybox.texture, index: 0)
+            
+            // Bind Mesh
+            encoder.setVertexBuffer(skybox.mesh.vertexBuffer, offset: 0, index: 0)
+            
+            if let indexBuffer = skybox.mesh.indexBuffer {
+                encoder.drawIndexed(indexCount: skybox.mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: skybox.mesh.indexType)
             }
         }
         

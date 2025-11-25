@@ -16,6 +16,10 @@ public class MetalTexture: Texture {
     }
 
     public func upload(data: Data, bytesPerRow: Int) throws {
+        try upload(data: data, bytesPerRow: bytesPerRow, slice: 0)
+    }
+
+    public func upload(data: Data, bytesPerRow: Int, slice: Int) throws {
         let w = mtlTexture.width
         let h = mtlTexture.height
         let expected = bytesPerRow * h
@@ -25,7 +29,7 @@ public class MetalTexture: Texture {
         data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
             guard let base = ptr.baseAddress else { return }
             let region = MTLRegionMake2D(0, 0, w, h)
-            mtlTexture.replace(region: region, mipmapLevel: 0, withBytes: base, bytesPerRow: bytesPerRow)
+            mtlTexture.replace(region: region, mipmapLevel: 0, slice: slice, withBytes: base, bytesPerRow: bytesPerRow, bytesPerImage: bytesPerRow * h)
         }
     }
     

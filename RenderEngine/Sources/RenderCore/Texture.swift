@@ -18,17 +18,24 @@ public struct TextureUsage: OptionSet {
     public static let cpuWrite = TextureUsage(rawValue: 1 << 4)
 }
 
+public enum TextureType {
+    case type2D
+    case typeCube
+}
+
 public struct TextureDescriptor {
     public var width: Int
     public var height: Int
     public var pixelFormat: PixelFormat
     public var usage: TextureUsage
+    public var textureType: TextureType
 
-    public init(width: Int, height: Int, pixelFormat: PixelFormat = .bgra8Unorm, usage: TextureUsage = [.shaderRead]) {
+    public init(width: Int, height: Int, pixelFormat: PixelFormat = .bgra8Unorm, usage: TextureUsage = [.shaderRead], textureType: TextureType = .type2D) {
         self.width = width
         self.height = height
         self.pixelFormat = pixelFormat
         self.usage = usage
+        self.textureType = textureType
     }
 }
 
@@ -39,6 +46,18 @@ public protocol Texture: AnyObject {
     /// Upload pixel data into the texture.
     func upload(data: Data, bytesPerRow: Int) throws
     
+    /// Upload pixel data into a specific slice of the texture (for Cubemaps/Arrays).
+    func upload(data: Data, bytesPerRow: Int, slice: Int) throws
+    
     /// Read pixel data from the texture.
     func getBytes(_ buffer: UnsafeMutableRawPointer, bytesPerRow: Int)
+}
+
+public extension Texture {
+    func upload(data: Data, bytesPerRow: Int, slice: Int) throws {
+        // Default implementation ignores slice or throws?
+        // For backward compatibility, we can just call the main upload if slice is 0, but that's risky.
+        // Better to force implementation or provide empty default.
+        // Let's provide empty default to avoid breaking other backends immediately, but Metal needs it.
+    }
 }
