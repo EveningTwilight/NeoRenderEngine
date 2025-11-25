@@ -101,7 +101,20 @@ class SceneGraphViewModel: ObservableObject {
             lightNode.transform.position = Vec3(2.0, 4.0, 2.0)
             let lightComp = LightComponent(type: .point, color: Vec3(1, 1, 1), intensity: 1.0)
             lightNode.addComponent(lightComp)
-            scene.addNode(lightNode)
+            
+            // Make the light orbit
+            let lightRotator = RotatorComponent()
+            lightRotator.speed = 0.5
+            lightRotator.axis = Vec3(0, 1, 0)
+            // To orbit, we need a parent that rotates, or a custom orbiter.
+            // RotatorComponent rotates the node itself. If the node is at (0,0,0), it rotates in place.
+            // If the node is at (2,4,2), rotating it in place changes its orientation, not position.
+            // To orbit, we can attach it to a pivot node.
+            
+            let lightPivot = Node(name: "LightPivot")
+            lightPivot.addComponent(lightRotator)
+            lightPivot.addChild(lightNode)
+            scene.addNode(lightPivot)
             
             // Cube Node
             let cubeNode = Node(name: "Cube")
