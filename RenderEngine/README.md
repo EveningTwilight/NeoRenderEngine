@@ -70,3 +70,24 @@ encoder.endEncoding()
 commandBuffer.present(drawableTexture)
 commandBuffer.commit()
 ```
+
+### Scene Graph
+
+The engine provides a simple Node-Component based scene graph.
+
+```swift
+// Create a root node
+let root = Node(name: "Root")
+
+// Create a child node and attach it
+let child = Node(name: "Child")
+child.transform.position = Vec3(0, 1, 0)
+root.addChild(child)
+
+// Attach components
+let meshRenderer = MeshRenderer(mesh: myMesh, material: myMaterial)
+child.addComponent(meshRenderer)
+
+// Update the scene (propagates transforms)
+root.update(deltaTime: 0.016)
+```

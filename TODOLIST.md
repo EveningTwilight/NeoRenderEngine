@@ -72,7 +72,7 @@
 - [ ] **渲染质量优化**
     - [x] PCF 柔化阴影
     - [x] 阴影 Bias 自适应
-- [ ] **场景管理**
-    - [ ] 场景图 (Scene Graph) 基础节点
-    - [ ] 组件化架构 (Component System)
+- [x] **场景管理**
+    - [x] 场景图 (Scene Graph) 基础节点
+    - [x] 组件化架构 (Component System)
 

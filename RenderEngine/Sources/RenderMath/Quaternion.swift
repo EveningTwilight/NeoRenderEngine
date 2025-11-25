@@ -104,4 +104,12 @@ public struct Quaternion: Equatable {
             w: lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z
         )
     }
+    
+    public static func * (lhs: Quaternion, rhs: Vec3) -> Vec3 {
+        let qVec = Vec3(lhs.x, lhs.y, lhs.z)
+        let uv = qVec.cross(rhs)
+        let uuv = qVec.cross(uv)
+        
+        return rhs + ((uv * lhs.w) + uuv) * 2.0
+    }
 }
