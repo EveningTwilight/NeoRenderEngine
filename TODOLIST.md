@@ -66,7 +66,7 @@
 
 ## Phase 6: 优化与扩展 (Optimization & Extension)
 - [ ] **Shader 系统增强**
-    - [ ] Shader 反射与自动化绑定 (Reflection & Auto-binding)
+    - [x] Shader 反射与自动化绑定 (Reflection & Auto-binding)
     - [ ] Shader 库加载 (.metallib) 支持
     - [ ] Shader 包含机制 (#include)
 - [ ] **渲染质量优化**
