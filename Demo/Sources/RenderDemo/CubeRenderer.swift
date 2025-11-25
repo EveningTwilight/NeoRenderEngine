@@ -19,11 +19,6 @@ class CubeRenderer: RenderEngineDelegate {
     var shadowPass: ShadowMapPass?
     var shadowMaterial: Material?
     
-    struct ShadowUniforms {
-        var lightSpaceMatrix: Mat4
-        var model: Mat4
-    }
-    
     func update(deltaTime: Double) {
         // rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
         
@@ -85,7 +80,6 @@ class CubeRenderer: RenderEngineDelegate {
         
         guard let mesh = mesh,
               let material = material,
-              let uniformBuffer = uniformBuffer,
               let shadowPass = shadowPass,
               let shadowMaterial = shadowMaterial else { return }
         
@@ -105,14 +99,10 @@ class CubeRenderer: RenderEngineDelegate {
         let lightSpaceMatrix = lightProjection * lightView
         let model = Mat4.rotation(angleRadians: rotationAngle, axis: Vec3(0, 1, 0)) * Mat4.rotation(angleRadians: rotationAngle * 0.5, axis: Vec3(1, 0, 0))
         
-        var shadowUniforms = ShadowUniforms(lightSpaceMatrix: lightSpaceMatrix, model: model)
-        let shadowUniformBuffer = device.makeBuffer(length: MemoryLayout<ShadowUniforms>.size)
-        let ptr = shadowUniformBuffer.contents()
-        withUnsafeBytes(of: &shadowUniforms) {
-            ptr.copyMemory(from: $0.baseAddress!, byteCount: MemoryLayout<ShadowUniforms>.size)
-        }
-        
-        shadowEncoder.setVertexBuffer(shadowUniformBuffer, offset: 0, index: 1)
+        shadowMaterial.setValue(lightSpaceMatrix, for: "lightSpaceMatrix")
+        shadowMaterial.setValue(model, for: "modelMatrix")
+        shadowMaterial.updateUniforms(device: device)
+        shadowMaterial.bind(to: shadowEncoder)
         
         if let indexBuffer = mesh.indexBuffer {
             shadowEncoder.drawIndexed(indexCount: mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: mesh.indexType)
@@ -124,7 +114,7 @@ class CubeRenderer: RenderEngineDelegate {
         
         encoder.setViewport(x: 0, y: 0, width: Float(renderPassDescriptor.colorTargets[0].texture.width), height: Float(renderPassDescriptor.colorTargets[0].texture.height))
         
-        // Bind Material (Pipeline, DepthState, Textures)
+        // Bind Material (Pipeline, DepthState, Textures, Uniforms)
         material.bind(to: encoder)
         
         // Bind Shadow Map
@@ -132,10 +122,6 @@ class CubeRenderer: RenderEngineDelegate {
         
         // Bind Mesh (Vertex Buffer)
         encoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
-        
-        // Bind Uniforms
-        encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
-        encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 1)
         
         // Draw
         if let indexBuffer = mesh.indexBuffer {
@@ -161,17 +147,6 @@ class CubeRenderer: RenderEngineDelegate {
         
         let mvp = (projection * view) * model
         
-        // Lighting Uniforms
-        struct Uniforms {
-            var mvp: Mat4
-            var model: Mat4
-            var viewPos: Vec3
-            var lightPos: Vec3
-            var lightColor: Vec3
-            var objectColor: Vec3
-            var lightSpaceMatrix: Mat4
-        }
-        
         let lightPos = Vec3(2.0, 4.0, 2.0)
         let viewPos = camera?.position ?? Vec3(0, 0, 3)
         
@@ -180,24 +155,15 @@ class CubeRenderer: RenderEngineDelegate {
         let lightView = Mat4.lookAt(eye: lightPos, center: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
         let lightSpaceMatrix = lightProjection * lightView
         
-        var uniforms = Uniforms(
-            mvp: mvp,
-            model: model,
-            viewPos: viewPos,
-            lightPos: lightPos,
-            lightColor: Vec3(1.0, 1.0, 1.0),
-            objectColor: Vec3(1.0, 0.5, 0.31),
-            lightSpaceMatrix: lightSpaceMatrix
-        )
+        material?.setValue(mvp, for: "modelViewProjectionMatrix")
+        material?.setValue(model, for: "modelMatrix")
+        material?.setValue(Vec4(viewPos.x, viewPos.y, viewPos.z, 1.0), for: "viewPos")
+        material?.setValue(Vec4(lightPos.x, lightPos.y, lightPos.z, 1.0), for: "lightPos")
+        material?.setValue(Vec4(1.0, 1.0, 1.0, 1.0), for: "lightColor")
+        material?.setValue(Vec4(1.0, 0.5, 0.31, 1.0), for: "objectColor")
+        material?.setValue(lightSpaceMatrix, for: "lightSpaceMatrix")
         
-        if uniformBuffer == nil || uniformBuffer!.length != MemoryLayout<Uniforms>.size {
-             uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.size)
-        }
-        
-        let ptr = uniformBuffer!.contents()
-        withUnsafeBytes(of: &uniforms) {
-            ptr.copyMemory(from: $0.baseAddress!, byteCount: MemoryLayout<Uniforms>.size)
-        }
+        material?.updateUniforms(device: device)
     }
     
     private func setupResources(device: RenderDevice, resourceManager: ResourceManager) throws {
