@@ -63,7 +63,7 @@ public class OBJLoader {
                             let components = faceIndex.components(separatedBy: "/")
                             let vIdx = Int(components[0])! - 1
                             
-                            var pos = positions[vIdx]
+                            let pos = positions[vIdx]
                             var uv = Vec2(0, 0)
                             var norm = Vec3(0, 0, 0)
                             

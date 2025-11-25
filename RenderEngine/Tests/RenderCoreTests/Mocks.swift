@@ -154,6 +154,10 @@ class MockRenderDevice: RenderDevice {
         return MockShaderProgram(label: label)
     }
     
+    func makeShaderProgram(from url: URL, label: String?) throws -> ShaderProgram {
+        return MockShaderProgram(label: label)
+    }
+    
     func makePipeline(descriptor: PipelineDescriptor, shader: ShaderProgram) throws -> PipelineState {
         return MockPipelineState(descriptor: descriptor)
     }

@@ -14,6 +14,9 @@ public protocol RenderDevice {
     /// Create shader program from source (backend handles compilation)
     func makeShaderProgram(source: String, label: String?) throws -> ShaderProgram
 
+    /// Create shader program from a compiled library file (e.g. .metallib)
+    func makeShaderProgram(from url: URL, label: String?) throws -> ShaderProgram
+
     /// Create pipeline state from descriptor and shader program
     func makePipeline(descriptor: PipelineDescriptor, shader: ShaderProgram) throws -> PipelineState
 

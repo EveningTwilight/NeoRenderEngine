@@ -61,11 +61,20 @@ public class MetalDevice: RenderDevice {
         let vertexFunction = library.makeFunction(name: "vertex_main")
         let fragmentFunction = library.makeFunction(name: "fragment_main")
         
-        guard let vfn = vertexFunction else {
-            throw NSError(domain: "RenderEngineMetal", code: -1, userInfo: [NSLocalizedDescriptionKey: "No vertex_main function found"])
-        }
+        // For source compilation, we expect at least a vertex function or it's likely an error in our simple usage
+        // But since we relaxed MetalShader, we can allow it to be nil if the user intends to specify function names later
         
-        return MetalShader(vertex: vfn, fragment: fragmentFunction, library: library, label: label)
+        return MetalShader(vertex: vertexFunction, fragment: fragmentFunction, library: library, label: label)
+    }
+
+    public func makeShaderProgram(from url: URL, label: String?) throws -> ShaderProgram {
+        let library = try device.makeLibrary(URL: url)
+        
+        // Try to find default functions
+        let vertexFunction = library.makeFunction(name: "vertex_main")
+        let fragmentFunction = library.makeFunction(name: "fragment_main")
+        
+        return MetalShader(vertex: vertexFunction, fragment: fragmentFunction, library: library, label: label)
     }
 
     public func makeShaderLoader() -> ShaderLoader {

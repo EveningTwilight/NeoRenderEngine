@@ -65,8 +65,15 @@ public class ResourceManager {
             throw NSError(domain: "ResourceManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Shader file '\(fileName)' not found in bundle"])
         }
         
-        let source = try String(contentsOf: url, encoding: .utf8)
-        return try createShader(name: name, source: source)
+        // Check extension
+        if url.pathExtension == "metallib" {
+            let shader = try device.makeShaderProgram(from: url, label: name)
+            shaders[name] = shader
+            return shader
+        } else {
+            let source = try String(contentsOf: url, encoding: .utf8)
+            return try createShader(name: name, source: source)
+        }
     }
     
     public func getShader(name: String) -> ShaderProgram? {

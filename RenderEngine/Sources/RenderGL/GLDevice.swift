@@ -35,6 +35,10 @@ public class GLDevice: RenderDevice {
         return try GLShader(vertexSource: vertexSource, fragmentSource: fragmentSource, label: label)
     }
 
+    public func makeShaderProgram(from url: URL, label: String?) throws -> ShaderProgram {
+        throw NSError(domain: "GLDevice", code: -1, userInfo: [NSLocalizedDescriptionKey: "Loading shader from binary/library is not supported in OpenGL ES backend yet."])
+    }
+
     public func makeShaderLoader() -> ShaderLoader {
         return GLShaderLoader(device: self)
     }
