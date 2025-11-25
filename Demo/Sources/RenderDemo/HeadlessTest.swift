@@ -20,11 +20,11 @@ class HeadlessRenderer {
         let device = engine.device
         
         // Create Color Texture
-        let colorDesc = TextureDescriptor(width: width, height: height, pixelFormat: 80, usage: 0) // .bgra8Unorm
+        let colorDesc = TextureDescriptor(width: width, height: height, pixelFormat: .bgra8Unorm, usage: [.renderTarget, .shaderRead, .cpuRead])
         let colorTexture = device.makeTexture(descriptor: colorDesc)
         
         // Create Depth Texture
-        let depthDesc = TextureDescriptor(width: width, height: height, pixelFormat: 252, usage: 0) // .depth32Float
+        let depthDesc = TextureDescriptor(width: width, height: height, pixelFormat: .depth32Float, usage: [.renderTarget])
         let depthTexture = device.makeTexture(descriptor: depthDesc)
         
         // Create RenderPassDescriptor
@@ -41,6 +41,9 @@ class HeadlessRenderer {
         renderer.update(deltaTime: 0.016)
         renderer.draw(in: engine, commandBuffer: commandBuffer, renderPassDescriptor: passDescriptor)
         
+        // Synchronize for CPU Read
+        commandBuffer.synchronize(colorTexture)
+        
         // Commit
         commandBuffer.commit()
         
@@ -48,7 +51,32 @@ class HeadlessRenderer {
         commandBuffer.waitUntilCompleted()
         
         // Read Pixels
+        printPixelData(texture: colorTexture)
         saveTextureToPNG(texture: colorTexture, url: outputURL.deletingPathExtension().appendingPathExtension("png"))
+    }
+    
+    private func printPixelData(texture: Texture) {
+        let bytesPerPixel = 4
+        let rowBytes = width * bytesPerPixel
+        var buffer = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+        texture.getBytes(&buffer, bytesPerRow: rowBytes)
+        
+        // Check center pixel
+        let cx = width / 2
+        let cy = height / 2
+        let offset = (cy * width + cx) * bytesPerPixel
+        let b = buffer[offset]
+        let g = buffer[offset+1]
+        let r = buffer[offset+2]
+        let a = buffer[offset+3]
+        print("Center Pixel (BGRA): \(b), \(g), \(r), \(a)")
+        
+        // Check corner pixel (0,0)
+        let b0 = buffer[0]
+        let g0 = buffer[1]
+        let r0 = buffer[2]
+        let a0 = buffer[3]
+        print("Corner Pixel (BGRA): \(b0), \(g0), \(r0), \(a0)")
     }
     
     private func saveTextureToPNG(texture: Texture, url: URL) {

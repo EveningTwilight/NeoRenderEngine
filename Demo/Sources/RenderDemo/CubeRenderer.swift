@@ -16,6 +16,14 @@ class CubeRenderer: RenderEngineDelegate {
     var cameraYaw: Float = 0.0
     var cameraPitch: Float = 0.0
     
+    var shadowPass: ShadowMapPass?
+    var shadowMaterial: Material?
+    
+    struct ShadowUniforms {
+        var lightSpaceMatrix: Mat4
+        var model: Mat4
+    }
+    
     func update(deltaTime: Double) {
         // rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
         
@@ -64,18 +72,63 @@ class CubeRenderer: RenderEngineDelegate {
             }
         }
         
+        if shadowPass == nil {
+            shadowPass = ShadowMapPass(device: device, width: 2048, height: 2048)
+            do {
+                try setupShadowResources(device: device, resourceManager: resourceManager)
+            } catch {
+                print("Failed to setup shadow resources: \(error)")
+            }
+        }
+        
         updateUniforms(device: device, aspectRatio: Float(renderPassDescriptor.colorTargets[0].texture.width) / Float(renderPassDescriptor.colorTargets[0].texture.height))
         
         guard let mesh = mesh,
               let material = material,
-              let uniformBuffer = uniformBuffer else { return }
+              let uniformBuffer = uniformBuffer,
+              let shadowPass = shadowPass,
+              let shadowMaterial = shadowMaterial else { return }
         
+        // --- Shadow Pass ---
+        // print("Encoding Shadow Pass")
+        let shadowEncoder = commandBuffer.beginRenderPass(shadowPass.passDescriptor)
+        shadowEncoder.setPipeline(shadowMaterial.pipelineState)
+        if let dss = shadowMaterial.depthStencilState {
+            shadowEncoder.setDepthStencilState(dss)
+        }
+        shadowEncoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
+        
+        // Shadow Uniforms
+        let lightPos = Vec3(2.0, 4.0, 2.0)
+        let lightProjection = Mat4.orthographic(left: -10, right: 10, bottom: -10, top: 10, near: 1.0, far: 20.0)
+        let lightView = Mat4.lookAt(eye: lightPos, center: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
+        let lightSpaceMatrix = lightProjection * lightView
+        let model = Mat4.rotation(angleRadians: rotationAngle, axis: Vec3(0, 1, 0)) * Mat4.rotation(angleRadians: rotationAngle * 0.5, axis: Vec3(1, 0, 0))
+        
+        var shadowUniforms = ShadowUniforms(lightSpaceMatrix: lightSpaceMatrix, model: model)
+        let shadowUniformBuffer = device.makeBuffer(length: MemoryLayout<ShadowUniforms>.size)
+        let ptr = shadowUniformBuffer.contents()
+        withUnsafeBytes(of: &shadowUniforms) {
+            ptr.copyMemory(from: $0.baseAddress!, byteCount: MemoryLayout<ShadowUniforms>.size)
+        }
+        
+        shadowEncoder.setVertexBuffer(shadowUniformBuffer, offset: 0, index: 1)
+        
+        if let indexBuffer = mesh.indexBuffer {
+            shadowEncoder.drawIndexed(indexCount: mesh.indexCount, indexBuffer: indexBuffer, indexOffset: 0, indexType: mesh.indexType)
+        }
+        shadowEncoder.endEncoding()
+        
+        // --- Main Pass ---
         let encoder = commandBuffer.beginRenderPass(renderPassDescriptor)
         
         encoder.setViewport(x: 0, y: 0, width: Float(renderPassDescriptor.colorTargets[0].texture.width), height: Float(renderPassDescriptor.colorTargets[0].texture.height))
         
         // Bind Material (Pipeline, DepthState, Textures)
         material.bind(to: encoder)
+        
+        // Bind Shadow Map
+        encoder.setFragmentTexture(shadowPass.shadowTexture, index: 1)
         
         // Bind Mesh (Vertex Buffer)
         encoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
@@ -116,10 +169,16 @@ class CubeRenderer: RenderEngineDelegate {
             var lightPos: Vec3
             var lightColor: Vec3
             var objectColor: Vec3
+            var lightSpaceMatrix: Mat4
         }
         
-        let lightPos = Vec3(2.0, 2.0, 2.0)
+        let lightPos = Vec3(2.0, 4.0, 2.0)
         let viewPos = camera?.position ?? Vec3(0, 0, 3)
+        
+        // Calculate Light Space Matrix
+        let lightProjection = Mat4.orthographic(left: -10, right: 10, bottom: -10, top: 10, near: 1.0, far: 20.0)
+        let lightView = Mat4.lookAt(eye: lightPos, center: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
+        let lightSpaceMatrix = lightProjection * lightView
         
         var uniforms = Uniforms(
             mvp: mvp,
@@ -127,7 +186,8 @@ class CubeRenderer: RenderEngineDelegate {
             viewPos: viewPos,
             lightPos: lightPos,
             lightColor: Vec3(1.0, 1.0, 1.0),
-            objectColor: Vec3(1.0, 0.5, 0.31)
+            objectColor: Vec3(1.0, 0.5, 0.31),
+            lightSpaceMatrix: lightSpaceMatrix
         )
         
         if uniformBuffer == nil || uniformBuffer!.length != MemoryLayout<Uniforms>.size {
@@ -146,13 +206,11 @@ class CubeRenderer: RenderEngineDelegate {
         self.mesh = mesh
         
         // Shader Source
-        let shaderSource: String
-        var uniformBindings: [UniformBinding] = []
-        
         let isGL = String(describing: type(of: device)) == "GLDevice"
         
         if isGL {
-            shaderSource = """
+            // ...existing code...
+            let shaderSource = """
             #version 330 core
             layout(location = 0) in vec3 position;
             layout(location = 1) in vec3 normal;
@@ -213,110 +271,35 @@ class CubeRenderer: RenderEngineDelegate {
                 FragColor = vec4(result, 1.0) * texColor;
             }
             """
-            
             // Setup Uniform Bindings
             uniformBindings.append(UniformBinding(name: "modelViewProjectionMatrix", type: .mat4, bufferIndex: 1))
-            // Note: GL implementation needs to handle struct layout or individual uniforms. 
-            // For simplicity in this demo, we might need to update GL backend to support struct mapping or just bind individually.
-            // But since we are using a single buffer in Metal, let's stick to Metal first or assume GL backend can handle block binding if implemented.
-            // Given current GL backend is basic, this might break GL. Let's focus on Metal for "Advanced" features first or update GL backend later.
+            
+            let shader = try resourceManager.createShader(name: "CubeShader", source: shaderSource)
+            
+            var pipelineDesc = PipelineDescriptor(label: "CubePipeline")
+            pipelineDesc.vertexFunction = "vertex_main" // GL might ignore this or use it as entry point
+            pipelineDesc.fragmentFunction = "fragment_main"
+            pipelineDesc.colorPixelFormat = .bgra8Unorm
+            pipelineDesc.depthPixelFormat = .depth32Float
+            pipelineDesc.vertexDescriptor = mesh.vertexDescriptor
+            pipelineDesc.uniformBindings = uniformBindings
+            
+            self.material = Material(pipelineState: try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader))
             
         } else {
-            shaderSource = """
-            #include <metal_stdlib>
-            using namespace metal;
+            // Metal: Load from file
+            let shader = try resourceManager.loadShader(name: "CubeShader", fileName: "Shaders/CubeShader.metal", bundle: Bundle.module)
             
-            struct Uniforms {
-                float4x4 modelViewProjectionMatrix;
-                float4x4 modelMatrix;
-                float4 viewPos;
-                float4 lightPos;
-                float4 lightColor;
-                float4 objectColor;
-            };
+            var pipelineDesc = PipelineDescriptor(label: "CubePipeline")
+            pipelineDesc.vertexFunction = "vertex_main"
+            pipelineDesc.fragmentFunction = "fragment_main"
+            pipelineDesc.colorPixelFormat = .bgra8Unorm
+            pipelineDesc.depthPixelFormat = .depth32Float
+            pipelineDesc.vertexDescriptor = mesh.vertexDescriptor
+            pipelineDesc.uniformBindings = uniformBindings
             
-            struct VertexIn {
-                float3 position [[attribute(0)]];
-                float3 normal [[attribute(1)]];
-                float2 uv [[attribute(2)]];
-            };
-            
-            struct VertexOut {
-                float4 position [[position]];
-                float3 fragPos;
-                float3 normal;
-                float2 uv;
-            };
-            
-            vertex VertexOut vertex_main(VertexIn in [[stage_in]],
-                                         constant Uniforms& uniforms [[buffer(1)]]) {
-                VertexOut out;
-                out.position = uniforms.modelViewProjectionMatrix * float4(in.position, 1.0);
-                out.fragPos = float3(uniforms.modelMatrix * float4(in.position, 1.0));
-                
-                // Normal matrix calculation (simplified, assuming uniform scaling)
-                // Ideally should be passed as uniform
-                out.normal = float3(uniforms.modelMatrix * float4(in.normal, 0.0));
-                
-                out.uv = in.uv;
-                return out;
-            }
-            
-            fragment float4 fragment_main(VertexOut in [[stage_in]],
-                                          constant Uniforms& uniforms [[buffer(1)]],
-                                          texture2d<float> texture [[texture(0)]]) {
-                constexpr sampler textureSampler (mag_filter::linear, min_filter::linear);
-                
-                // Ambient
-                float ambientStrength = 0.1;
-                float3 ambient = ambientStrength * uniforms.lightColor.rgb;
-                
-                // Diffuse
-                float3 norm = normalize(in.normal);
-                float3 lightDir = normalize(uniforms.lightPos.rgb - in.fragPos);
-                float diff = max(dot(norm, lightDir), 0.0);
-                float3 diffuse = diff * uniforms.lightColor.rgb;
-                
-                // Specular
-                float specularStrength = 0.5;
-                float3 viewDir = normalize(uniforms.viewPos.rgb - in.fragPos);
-                float3 reflectDir = reflect(-lightDir, norm);
-                float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-                float3 specular = specularStrength * spec * uniforms.lightColor.rgb;
-                
-                float3 result = (ambient + diffuse + specular) * uniforms.objectColor.rgb;
-                float4 texColor = texture.sample(textureSampler, in.uv);
-                
-                // Combine lighting with texture (ignoring texture alpha for now)
-                // If texture is black/missing, we still want to see the lighting result
-                return float4(result, 1.0) * texColor; 
-                
-                // Debug: Show Texture Only
-                // return texColor;
-                
-                // Debug: Show Normals
-                // return float4(in.normal * 0.5 + 0.5, 1.0);
-                
-                // Debug: Show Object Color
-                // return float4(uniforms.objectColor.rgb, 1.0);
-                
-                // For now, let's just return the lighting result to verify Phong model
-                // return float4(result, 1.0);
-            }
-            """
+            self.material = Material(pipelineState: try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader))
         }
-        
-        let shader = try resourceManager.createShader(name: "CubeShader", source: shaderSource)
-        
-        var pipelineDesc = PipelineDescriptor(label: "CubePipeline")
-        pipelineDesc.vertexFunction = "vertex_main"
-        pipelineDesc.fragmentFunction = "fragment_main"
-        pipelineDesc.colorPixelFormat = 80 // .bgra8Unorm
-        pipelineDesc.depthPixelFormat = 252 // .depth32Float
-        pipelineDesc.vertexDescriptor = mesh.vertexDescriptor
-        pipelineDesc.uniformBindings = uniformBindings
-        
-        self.material = Material(pipelineState: try resourceManager.createPipeline(name: "CubePipeline", descriptor: pipelineDesc, shader: shader))
         
         // Depth Stencil State
         let depthDesc = DepthStencilDescriptor(label: "DepthState", depthCompareFunction: .less, isDepthWriteEnabled: true)
@@ -325,5 +308,21 @@ class CubeRenderer: RenderEngineDelegate {
         // Texture
         let tex = try resourceManager.createCheckerboardTexture(name: "Checkerboard")
         self.material?.setTexture(tex, at: 0)
+    }
+    
+    private func setupShadowResources(device: RenderDevice, resourceManager: ResourceManager) throws {
+        let shader = try resourceManager.loadShader(name: "ShadowShader", fileName: "Shaders/ShadowShader.metal", bundle: Bundle.module)
+        
+        var pipelineDesc = PipelineDescriptor(label: "ShadowPipeline")
+        pipelineDesc.vertexFunction = "vertex_main"
+        pipelineDesc.fragmentFunction = nil
+        pipelineDesc.colorPixelFormat = .invalid
+        pipelineDesc.depthPixelFormat = .depth32Float
+        pipelineDesc.vertexDescriptor = mesh?.vertexDescriptor
+        
+        self.shadowMaterial = Material(pipelineState: try resourceManager.createPipeline(name: "ShadowPipeline", descriptor: pipelineDesc, shader: shader))
+        
+        let depthDesc = DepthStencilDescriptor(label: "ShadowDepth", depthCompareFunction: .less, isDepthWriteEnabled: true)
+        self.shadowMaterial?.depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
     }
 }

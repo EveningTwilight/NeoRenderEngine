@@ -106,7 +106,7 @@ class TriangleRenderer: RenderEngineDelegate {
         var pipelineDesc = PipelineDescriptor(label: "TrianglePipeline")
         pipelineDesc.vertexFunction = "vertex_main"
         pipelineDesc.fragmentFunction = "fragment_main"
-        pipelineDesc.colorPixelFormat = 80 // .bgra8Unorm
+        pipelineDesc.colorPixelFormat = .bgra8Unorm
         
         self.pipeline = try device.makePipeline(descriptor: pipelineDesc, shader: shader)
         
