@@ -90,11 +90,18 @@ class SceneGraphViewModel: ObservableObject {
             material.setTexture(texture, at: 0)
             
             // Set Static Uniforms
-            material.setValue(Vec4(2.0, 4.0, 2.0, 1.0), for: "lightPos")
-            material.setValue(Vec4(1.0, 1.0, 1.0, 1.0), for: "lightColor")
+            // material.setValue(Vec4(2.0, 4.0, 2.0, 1.0), for: "lightPos") // Now handled by LightComponent
+            // material.setValue(Vec4(1.0, 1.0, 1.0, 1.0), for: "lightColor") // Now handled by LightComponent
             material.setValue(Vec4(1.0, 0.5, 0.31, 1.0), for: "objectColor")
             
             // 4. Build Scene Graph
+            
+            // Light Node
+            let lightNode = Node(name: "Light")
+            lightNode.transform.position = Vec3(2.0, 4.0, 2.0)
+            let lightComp = LightComponent(type: .point, color: Vec3(1, 1, 1), intensity: 1.0)
+            lightNode.addComponent(lightComp)
+            scene.addNode(lightNode)
             
             // Cube Node
             let cubeNode = Node(name: "Cube")
