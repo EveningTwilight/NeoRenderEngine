@@ -1,4 +1,5 @@
 import Foundation
+import RenderMath
 import RenderCore
 import RenderMetal
 import RenderGL
@@ -74,6 +75,34 @@ public class RenderView: UIView {
         // Update engine target layer
         engine.targetLayer = view.layer
     }
+    
+    // MARK: - Input Handling
+    
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        engine?.handleInput(.touchBegan(position: Vec2(Float(location.x), Float(location.y))))
+    }
+    
+    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let prevLocation = touch.previousLocation(in: self)
+        let delta = Vec2(Float(location.x - prevLocation.x), Float(location.y - prevLocation.y))
+        engine?.handleInput(.touchMoved(position: Vec2(Float(location.x), Float(location.y)), delta: delta))
+    }
+    
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        engine?.handleInput(.touchEnded(position: Vec2(Float(location.x), Float(location.y))))
+    }
+    
+    public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        engine?.handleInput(.touchCancelled(position: Vec2(Float(location.x), Float(location.y))))
+    }
 }
 
 public struct RenderViewRepresentable: UIViewRepresentable {
@@ -120,6 +149,37 @@ public class RenderView: NSView {
                 engine.targetLayer = metalLayer
             }
         }
+    }
+    
+    // MARK: - Input Handling
+    
+    public override var acceptsFirstResponder: Bool {
+        return true
+    }
+    
+    public override func mouseDown(with event: NSEvent) {
+        let location = self.convert(event.locationInWindow, from: nil)
+        // Flip Y for macOS
+        let y = self.bounds.height - location.y
+        engine?.handleInput(.mouseBegan(position: Vec2(Float(location.x), Float(y))))
+    }
+    
+    public override func mouseDragged(with event: NSEvent) {
+        let location = self.convert(event.locationInWindow, from: nil)
+        let y = self.bounds.height - location.y
+        let delta = Vec2(Float(event.deltaX), Float(event.deltaY))
+        engine?.handleInput(.mouseMoved(position: Vec2(Float(location.x), Float(y)), delta: delta))
+    }
+    
+    public override func mouseUp(with event: NSEvent) {
+        let location = self.convert(event.locationInWindow, from: nil)
+        let y = self.bounds.height - location.y
+        engine?.handleInput(.mouseEnded(position: Vec2(Float(location.x), Float(y))))
+    }
+    
+    public override func scrollWheel(with event: NSEvent) {
+        let delta = Vec2(Float(event.scrollingDeltaX), Float(event.scrollingDeltaY))
+        engine?.handleInput(.scroll(delta: delta))
     }
 }
 

@@ -28,4 +28,9 @@ public class MetalTexture: Texture {
             mtlTexture.replace(region: region, mipmapLevel: 0, withBytes: base, bytesPerRow: bytesPerRow)
         }
     }
+    
+    public func getBytes(_ buffer: UnsafeMutableRawPointer, bytesPerRow: Int) {
+        let region = MTLRegionMake2D(0, 0, width, height)
+        mtlTexture.getBytes(buffer, bytesPerRow: bytesPerRow, from: region, mipmapLevel: 0)
+    }
 }

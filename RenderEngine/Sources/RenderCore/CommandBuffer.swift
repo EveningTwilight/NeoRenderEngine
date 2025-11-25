@@ -9,4 +9,7 @@ public protocol CommandBuffer {
 
     /// Commit the command buffer for execution
     func commit()
+    
+    /// Wait until the command buffer has completed execution
+    func waitUntilCompleted()
 }

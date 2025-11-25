@@ -16,9 +16,14 @@ public enum RenderBackendType {
     case openGLES2
 }
 
-public protocol RenderEngineDelegate: AnyObject {
+public protocol RenderEngineDelegate: AnyObject, InputDelegate {
     func update(deltaTime: Double)
     func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor)
+}
+
+// Default implementation for InputDelegate to make it optional
+public extension RenderEngineDelegate {
+    func handleInput(_ event: InputEvent) {}
 }
 
 public class GraphicEngine {
@@ -57,6 +62,10 @@ public class GraphicEngine {
         }
         self.commandQueue = self.device.makeCommandQueue()
         self.resourceManager = ResourceManager(device: self.device)
+    }
+    
+    public func handleInput(_ event: InputEvent) {
+        delegate?.handleInput(event)
     }
     
     public func startRendering() {

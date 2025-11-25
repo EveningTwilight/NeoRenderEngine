@@ -11,8 +11,44 @@ class CubeRenderer: RenderEngineDelegate {
     
     var rotationAngle: Float = 0.0
     
+    // Camera Control
+    var cameraDistance: Float = 5.0
+    var cameraYaw: Float = 0.0
+    var cameraPitch: Float = 0.0
+    
     func update(deltaTime: Double) {
-        rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
+        // rotationAngle += Float(deltaTime) * 1.0 // Rotate 1 radian per second
+        
+        // Update Camera Position
+        let x = cameraDistance * sin(cameraYaw) * cos(cameraPitch)
+        let y = cameraDistance * sin(cameraPitch)
+        let z = cameraDistance * cos(cameraYaw) * cos(cameraPitch)
+        
+        camera?.position = Vec3(x, y, z)
+        camera?.target = Vec3(0, 0, 0)
+    }
+    
+    func handleInput(_ event: InputEvent) {
+        switch event {
+        case .mouseMoved(_, let delta), .touchMoved(_, let delta):
+            let sensitivity: Float = 0.01
+            cameraYaw -= delta.x * sensitivity
+            cameraPitch += delta.y * sensitivity
+            
+            // Clamp pitch to avoid gimbal lock
+            let limit = Float.pi / 2.0 - 0.1
+            if cameraPitch > limit { cameraPitch = limit }
+            if cameraPitch < -limit { cameraPitch = -limit }
+            
+        case .scroll(let delta):
+            let zoomSpeed: Float = 0.1
+            cameraDistance -= delta.y * zoomSpeed
+            if cameraDistance < 1.0 { cameraDistance = 1.0 }
+            if cameraDistance > 20.0 { cameraDistance = 20.0 }
+            
+        default:
+            break
+        }
     }
     
     func draw(in engine: GraphicEngine, commandBuffer: CommandBuffer, renderPassDescriptor: RenderPassDescriptor) {

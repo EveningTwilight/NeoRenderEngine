@@ -33,5 +33,10 @@ public class GLTexture: Texture {
             glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, GLsizei(width), GLsizei(height), 0, GLenum(GL_BGRA), GLenum(GL_UNSIGNED_BYTE), ptr.baseAddress)
         }
     }
+    
+    public func getBytes(_ buffer: UnsafeMutableRawPointer, bytesPerRow: Int) {
+        // Not implemented for GL yet
+        print("GLTexture.getBytes not implemented")
+    }
 }
 #endif

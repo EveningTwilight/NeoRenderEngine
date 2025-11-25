@@ -55,4 +55,8 @@ public class MetalCommandBuffer: CommandBuffer {
     public func commit() {
         mtlCommandBuffer.commit()
     }
+    
+    public func waitUntilCompleted() {
+        mtlCommandBuffer.waitUntilCompleted()
+    }
 }

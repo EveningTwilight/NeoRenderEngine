@@ -20,4 +20,7 @@ public protocol Texture: AnyObject {
     
     /// Upload pixel data into the texture.
     func upload(data: Data, bytesPerRow: Int) throws
+    
+    /// Read pixel data from the texture.
+    func getBytes(_ buffer: UnsafeMutableRawPointer, bytesPerRow: Int)
 }

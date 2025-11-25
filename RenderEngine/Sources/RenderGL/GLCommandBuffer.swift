@@ -14,5 +14,9 @@ public class GLCommandBuffer: CommandBuffer {
     public func commit() {
         // TODO: Execute GL commands
     }
+    
+    public func waitUntilCompleted() {
+        // No-op for GL
+    }
 }
 #endif
