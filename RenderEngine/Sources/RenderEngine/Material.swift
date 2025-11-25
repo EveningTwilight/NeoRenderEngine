@@ -62,31 +62,19 @@ public class Material {
                 }
             case .float2:
                 if let v = value as? Vec2 {
-                    let array = v.toArray()
-                    ptr.storeBytes(of: array[0], toByteOffset: offset, as: Float.self)
-                    ptr.storeBytes(of: array[1], toByteOffset: offset + 4, as: Float.self)
+                    ptr.storeArray(v.toArray(), toByteOffset: offset)
                 }
             case .float3:
                 if let v = value as? Vec3 {
-                    let array = v.toArray()
-                    ptr.storeBytes(of: array[0], toByteOffset: offset, as: Float.self)
-                    ptr.storeBytes(of: array[1], toByteOffset: offset + 4, as: Float.self)
-                    ptr.storeBytes(of: array[2], toByteOffset: offset + 8, as: Float.self)
+                    ptr.storeArray(v.toArray(), toByteOffset: offset)
                 }
             case .float4:
                 if let v = value as? Vec4 {
-                    let array = v.toArray()
-                    ptr.storeBytes(of: array[0], toByteOffset: offset, as: Float.self)
-                    ptr.storeBytes(of: array[1], toByteOffset: offset + 4, as: Float.self)
-                    ptr.storeBytes(of: array[2], toByteOffset: offset + 8, as: Float.self)
-                    ptr.storeBytes(of: array[3], toByteOffset: offset + 12, as: Float.self)
+                    ptr.storeArray(v.toArray(), toByteOffset: offset)
                 }
             case .mat4:
                 if let v = value as? Mat4 {
-                    let array = v.toArray()
-                    for i in 0..<16 {
-                        ptr.storeBytes(of: array[i], toByteOffset: offset + i * 4, as: Float.self)
-                    }
+                    ptr.storeArray(v.toArray(), toByteOffset: offset)
                 }
             }
         }
@@ -133,5 +121,15 @@ public class Material {
         }
         
         return nil
+    }
+}
+
+extension UnsafeMutableRawPointer {
+    fileprivate func storeArray<T>(_ array: [T], toByteOffset offset: Int) {
+        array.withUnsafeBytes { src in
+            if let base = src.baseAddress {
+                (self + offset).copyMemory(from: base, byteCount: src.count)
+            }
+        }
     }
 }

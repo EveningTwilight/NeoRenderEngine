@@ -206,6 +206,7 @@ class CubeRenderer: RenderEngineDelegate {
         self.mesh = mesh
         
         // Shader Source
+        var uniformBindings: [UniformBinding] = []
         let isGL = String(describing: type(of: device)) == "GLDevice"
         
         if isGL {

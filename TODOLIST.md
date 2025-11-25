@@ -44,12 +44,12 @@
     - [x] 跨平台编译修复 (macOS/iOS)
 
 ## Phase 4: 引擎封装与 Demo (Engine & Demo)
-- [ ] **RenderEngine 模块**
+- [x] **RenderEngine 模块**
     - [x] 实现 Mesh 和 Material 抽象
     - [x] 实现 OBJ 模型加载器
-    - [ ] 实现 Renderer (渲染循环)
-    - [ ] 实现 RenderLayer (UIView/SwiftUI 桥接)
-    - [ ] 资源管理器
+    - [x] 实现 Renderer (GraphicEngine 渲染循环)
+    - [x] 实现 RenderLayer (RenderView 桥接)
+    - [x] 资源管理器 (ResourceManager)
 - [x] **Demo 工程**
     - [x] 创建 SwiftUI 工程
     - [x] 集成 RenderEngine
@@ -59,5 +59,20 @@
 
 ## Phase 5: 进阶特性 (Advanced)
 - [x] 3D 模型加载 (.obj)
-- [ ] 基础光照模型 (Phong/Blinn-Phong)
-- [ ] 阴影贴图 (Shadow Mapping)
+- [x] 基础光照模型 (Phong/Blinn-Phong)
+- [x] 交互系统 (Input Handling)
+- [x] 摄像机控制 (Camera Controller)
+- [x] 阴影贴图 (Shadow Mapping)
+
+## Phase 6: 优化与扩展 (Optimization & Extension)
+- [ ] **Shader 系统增强**
+    - [ ] Shader 反射与自动化绑定 (Reflection & Auto-binding)
+    - [ ] Shader 库加载 (.metallib) 支持
+    - [ ] Shader 包含机制 (#include)
+- [ ] **渲染质量优化**
+    - [ ] PCF 柔化阴影
+    - [ ] 阴影 Bias 自适应
+- [ ] **场景管理**
+    - [ ] 场景图 (Scene Graph) 基础节点
+    - [ ] 组件化架构 (Component System)
+
