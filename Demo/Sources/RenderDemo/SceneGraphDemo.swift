@@ -112,6 +112,12 @@ class SceneGraphViewModel: ObservableObject {
             let camera = PerspectiveCamera(position: Vec3(0, 0, 5), target: Vec3(0, 0, 0), up: Vec3(0, 1, 0))
             let cameraNode = Node(name: "Camera")
             cameraNode.addComponent(CameraComponent(camera: camera))
+            
+            // Add Camera Controller
+            let controller = CameraControllerComponent()
+            controller.distance = 5.0
+            cameraNode.addComponent(controller)
+            
             scene.addNode(cameraNode)
             
             // 5. Bind to Engine
