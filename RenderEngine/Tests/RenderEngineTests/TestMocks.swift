@@ -36,6 +36,10 @@ class MockTexture: Texture {
     func upload(data: Data, bytesPerRow: Int) throws {
         self.uploadedData = data
     }
+    
+    func getBytes(_ buffer: UnsafeMutableRawPointer, bytesPerRow: Int) {
+        // Mock implementation
+    }
 }
 
 class MockShaderProgram: ShaderProgram {
@@ -47,6 +51,8 @@ class MockShaderProgram: ShaderProgram {
 
 class MockPipelineState: PipelineState {
     var descriptor: PipelineDescriptor
+    var reflection: PipelineReflection?
+    
     init(descriptor: PipelineDescriptor) {
         self.descriptor = descriptor
     }
@@ -113,6 +119,10 @@ class MockCommandBuffer: CommandBuffer {
     func commit() {
         committed = true
     }
+    
+    func synchronize(_ texture: Texture) {}
+    
+    func waitUntilCompleted() {}
 }
 
 class MockCommandQueue: CommandQueue {

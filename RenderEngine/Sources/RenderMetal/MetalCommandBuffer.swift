@@ -21,6 +21,7 @@ public class MetalCommandBuffer: CommandBuffer {
                 if let clear = color.clearColor {
                     attachment?.loadAction = .clear
                     attachment?.clearColor = MTLClearColorMake(Double(clear.x), Double(clear.y), Double(clear.z), Double(clear.w))
+                    // print("MetalCommandBuffer: Clear Color set to \(clear)")
                 } else {
                     attachment?.loadAction = .load
                 }
@@ -37,7 +38,7 @@ public class MetalCommandBuffer: CommandBuffer {
             } else {
                 attachment?.loadAction = .load
             }
-            attachment?.storeAction = .dontCare
+            attachment?.storeAction = .store
         }
 
         guard let encoder = mtlCommandBuffer.makeRenderCommandEncoder(descriptor: rpDesc) else {
@@ -50,6 +51,23 @@ public class MetalCommandBuffer: CommandBuffer {
         if let metalTex = texture as? MetalTexture, let drawable = metalTex.drawable {
             mtlCommandBuffer.present(drawable)
         }
+    }
+    
+    public func synchronize(_ texture: Texture) {
+        guard let metalTex = texture as? MetalTexture else { return }
+        #if os(macOS)
+        if metalTex.mtlTexture.storageMode == .managed {
+            let blitEncoder = mtlCommandBuffer.makeBlitCommandEncoder()
+            blitEncoder?.synchronize(resource: metalTex.mtlTexture)
+            blitEncoder?.endEncoding()
+        } else {
+            // If shared, we might need to ensure completion, but waitUntilCompleted handles that.
+            // However, let's print a warning if it's private.
+            if metalTex.mtlTexture.storageMode == .private {
+                print("Warning: Trying to synchronize private texture. This will fail to read back on CPU.")
+            }
+        }
+        #endif
     }
 
     public func commit() {

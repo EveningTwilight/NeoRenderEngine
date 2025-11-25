@@ -52,7 +52,7 @@ public class TextureLoader {
             }
         }
         
-        let descriptor = TextureDescriptor(width: width, height: height, pixelFormat: 80, usage: 0) // 80 = bgra8Unorm
+        let descriptor = TextureDescriptor(width: width, height: height, pixelFormat: .bgra8Unorm, usage: [.shaderRead, .cpuWrite])
         let texture = device.makeTexture(descriptor: descriptor)
         try texture.upload(data: data, bytesPerRow: bytesPerRow)
         
@@ -88,7 +88,7 @@ public class TextureLoader {
             data = Data(bytes: rawData, count: height * bytesPerRow)
         }
         
-        let descriptor = TextureDescriptor(width: width, height: height, pixelFormat: 80, usage: 0)
+        let descriptor = TextureDescriptor(width: width, height: height, pixelFormat: .bgra8Unorm, usage: [.shaderRead, .cpuWrite])
         let texture = device.makeTexture(descriptor: descriptor)
         try texture.upload(data: data, bytesPerRow: bytesPerRow)
         

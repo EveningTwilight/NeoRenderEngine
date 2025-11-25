@@ -6,6 +6,9 @@ public protocol CommandBuffer {
 
     /// Present a texture (usually the swapchain texture)
     func present(_ texture: Texture)
+    
+    /// Synchronize a texture for CPU access (if needed by backend)
+    func synchronize(_ texture: Texture)
 
     /// Commit the command buffer for execution
     func commit()

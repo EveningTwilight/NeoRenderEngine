@@ -24,4 +24,22 @@ public class Material {
             encoder.setFragmentTexture(texture, index: index)
         }
     }
+    
+    public func getBindingIndex(forName name: String) -> Int? {
+        guard let reflection = pipelineState.reflection else { return nil }
+        
+        // Check Vertex
+        if let arg = reflection.vertexArguments[name] {
+            if arg.bufferIndex >= 0 { return arg.bufferIndex }
+            if arg.textureIndex >= 0 { return arg.textureIndex }
+        }
+        
+        // Check Fragment
+        if let arg = reflection.fragmentArguments[name] {
+            if arg.bufferIndex >= 0 { return arg.bufferIndex }
+            if arg.textureIndex >= 0 { return arg.textureIndex }
+        }
+        
+        return nil
+    }
 }

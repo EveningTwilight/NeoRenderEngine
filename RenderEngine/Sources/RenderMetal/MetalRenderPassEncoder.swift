@@ -88,14 +88,11 @@ public class MetalRenderPassEncoder: RenderPassEncoder {
         }
     }
     
-    private func validateArguments(_ arguments: [MTLArgument]?, boundBuffers: Set<Int>, stage: String) {
-        guard let args = arguments else { return }
-        for arg in args {
-            if arg.type == .buffer && arg.isActive {
-                // Skip system buffers if any (usually indices like 30, 31 might be reserved in some contexts, but standard MSL buffers are 0-29)
-                // For now, we assume all active buffer arguments are user-defined.
-                if !boundBuffers.contains(arg.index) {
-                    print("⚠️ WARNING: \(stage) buffer at index \(arg.index) (\(arg.name)) is NOT bound!")
+    private func validateArguments(_ arguments: [String: ShaderArgument], boundBuffers: Set<Int>, stage: String) {
+        for (_, arg) in arguments {
+            if arg.bufferIndex >= 0 && arg.isActive {
+                if !boundBuffers.contains(arg.bufferIndex) {
+                    print("⚠️ WARNING: \(stage) buffer at index \(arg.bufferIndex) (\(arg.name)) is NOT bound!")
                 }
             }
         }

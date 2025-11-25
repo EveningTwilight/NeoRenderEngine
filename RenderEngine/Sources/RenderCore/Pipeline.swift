@@ -32,12 +32,12 @@ public struct PipelineDescriptor: Hashable {
     public var label: String?
     public var vertexFunction: String?
     public var fragmentFunction: String?
-    public var colorPixelFormat: Int
-    public var depthPixelFormat: Int
+    public var colorPixelFormat: PixelFormat
+    public var depthPixelFormat: PixelFormat
     public var vertexDescriptor: VertexDescriptor?
     public var uniformBindings: [UniformBinding]
 
-    public init(label: String? = nil, vertexFunction: String? = nil, fragmentFunction: String? = nil, colorPixelFormat: Int = 0, depthPixelFormat: Int = 0, vertexDescriptor: VertexDescriptor? = nil, uniformBindings: [UniformBinding] = []) {
+    public init(label: String? = nil, vertexFunction: String? = nil, fragmentFunction: String? = nil, colorPixelFormat: PixelFormat = .bgra8Unorm, depthPixelFormat: PixelFormat = .depth32Float, vertexDescriptor: VertexDescriptor? = nil, uniformBindings: [UniformBinding] = []) {
         self.label = label
         self.vertexFunction = vertexFunction
         self.fragmentFunction = fragmentFunction
@@ -68,6 +68,33 @@ public struct PipelineDescriptor: Hashable {
     }
 }
 
+public struct ShaderArgument: Hashable {
+    public var name: String
+    public var type: UniformType
+    public var bufferIndex: Int
+    public var textureIndex: Int
+    public var isActive: Bool
+    
+    public init(name: String, type: UniformType, bufferIndex: Int = -1, textureIndex: Int = -1, isActive: Bool = true) {
+        self.name = name
+        self.type = type
+        self.bufferIndex = bufferIndex
+        self.textureIndex = textureIndex
+        self.isActive = isActive
+    }
+}
+
+public struct PipelineReflection {
+    public var vertexArguments: [String: ShaderArgument]
+    public var fragmentArguments: [String: ShaderArgument]
+    
+    public init(vertexArguments: [String: ShaderArgument] = [:], fragmentArguments: [String: ShaderArgument] = [:]) {
+        self.vertexArguments = vertexArguments
+        self.fragmentArguments = fragmentArguments
+    }
+}
+
 public protocol PipelineState: AnyObject {
     var descriptor: PipelineDescriptor { get }
+    var reflection: PipelineReflection? { get }
 }

@@ -10,6 +10,10 @@ public class GLCommandBuffer: CommandBuffer {
     public func present(_ texture: Texture) {
         // GL usually handles swap buffers at the context level
     }
+    
+    public func synchronize(_ texture: Texture) {
+        // No-op for GL
+    }
 
     public func commit() {
         // TODO: Execute GL commands

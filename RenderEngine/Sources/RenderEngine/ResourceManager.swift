@@ -56,6 +56,19 @@ public class ResourceManager {
         return shader
     }
     
+    public func loadShader(name: String, fileName: String, bundle: Bundle = .main) throws -> ShaderProgram {
+        if let shader = shaders[name] {
+            return shader
+        }
+        
+        guard let url = bundle.url(forResource: fileName, withExtension: nil) else {
+            throw NSError(domain: "ResourceManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Shader file '\(fileName)' not found in bundle"])
+        }
+        
+        let source = try String(contentsOf: url, encoding: .utf8)
+        return try createShader(name: name, source: source)
+    }
+    
     public func getShader(name: String) -> ShaderProgram? {
         return shaders[name]
     }

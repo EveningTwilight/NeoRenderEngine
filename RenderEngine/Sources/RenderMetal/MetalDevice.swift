@@ -32,12 +32,22 @@ public class MetalDevice: RenderDevice {
         let mtlDesc = MTLTextureDescriptor()
         mtlDesc.width = descriptor.width
         mtlDesc.height = descriptor.height
-        if let pf = MTLPixelFormat(rawValue: UInt(descriptor.pixelFormat)), pf != .invalid {
-            mtlDesc.pixelFormat = pf
+        mtlDesc.pixelFormat = convertPixelFormat(descriptor.pixelFormat)
+        mtlDesc.usage = convertTextureUsage(descriptor.usage)
+        
+        // Handle CPU Read/Write access
+        if descriptor.usage.contains(.cpuRead) || descriptor.usage.contains(.cpuWrite) {
+            #if os(macOS)
+            mtlDesc.storageMode = .managed
+            #else
+            mtlDesc.storageMode = .shared
+            #endif
+            // print("MetalDevice: Created Managed/Shared Texture")
         } else {
-            mtlDesc.pixelFormat = .bgra8Unorm
+            mtlDesc.storageMode = .private
+            // print("MetalDevice: Created Private Texture")
         }
-        mtlDesc.usage = [.renderTarget, .shaderRead, .shaderWrite]
+        
         guard let tex = device.makeTexture(descriptor: mtlDesc) else {
             fatalError("MetalDevice: failed to create MTLTexture")
         }
@@ -82,14 +92,20 @@ public class MetalDevice: RenderDevice {
         let desc = MTLRenderPipelineDescriptor()
         
         // Vertex Function
-        if let vname = descriptor.vertexFunction, let lib = metalShader.library, let vfn = lib.makeFunction(name: vname) {
+        if let vname = descriptor.vertexFunction {
+            guard let lib = metalShader.library, let vfn = lib.makeFunction(name: vname) else {
+                throw NSError(domain: "RenderEngineMetal", code: -5, userInfo: [NSLocalizedDescriptionKey: "Vertex function '\(vname)' not found in shader library"])
+            }
             desc.vertexFunction = vfn
         } else {
             desc.vertexFunction = metalShader.vertexFunction
         }
         
         // Fragment Function
-        if let fname = descriptor.fragmentFunction, let lib = metalShader.library, let ffn = lib.makeFunction(name: fname) {
+        if let fname = descriptor.fragmentFunction {
+            guard let lib = metalShader.library, let ffn = lib.makeFunction(name: fname) else {
+                throw NSError(domain: "RenderEngineMetal", code: -6, userInfo: [NSLocalizedDescriptionKey: "Fragment function '\(fname)' not found in shader library"])
+            }
             desc.fragmentFunction = ffn
         } else {
             desc.fragmentFunction = metalShader.fragmentFunction
@@ -99,15 +115,8 @@ public class MetalDevice: RenderDevice {
             throw NSError(domain: "RenderEngineMetal", code: -3, userInfo: [NSLocalizedDescriptionKey: "No vertex function available for pipeline"])
         }
 
-        if let pf = MTLPixelFormat(rawValue: UInt(descriptor.colorPixelFormat)), pf != .invalid {
-            desc.colorAttachments[0].pixelFormat = pf
-        } else {
-            desc.colorAttachments[0].pixelFormat = .bgra8Unorm
-        }
-        
-        if let dpf = MTLPixelFormat(rawValue: UInt(descriptor.depthPixelFormat)), dpf != .invalid {
-            desc.depthAttachmentPixelFormat = dpf
-        }
+        desc.colorAttachments[0].pixelFormat = convertPixelFormat(descriptor.colorPixelFormat)
+        desc.depthAttachmentPixelFormat = convertPixelFormat(descriptor.depthPixelFormat)
 
         // Vertex Descriptor Conversion
         if let vd = descriptor.vertexDescriptor {
@@ -159,5 +168,22 @@ public class MetalDevice: RenderDevice {
         case .float4: return .float4
         case .uchar4: return .uchar4
         }
+    }
+
+    private func convertPixelFormat(_ format: PixelFormat) -> MTLPixelFormat {
+        switch format {
+        case .bgra8Unorm: return .bgra8Unorm
+        case .rgba8Unorm: return .rgba8Unorm
+        case .depth32Float: return .depth32Float
+        case .invalid: return .invalid
+        }
+    }
+    
+    private func convertTextureUsage(_ usage: TextureUsage) -> MTLTextureUsage {
+        var mtlUsage: MTLTextureUsage = []
+        if usage.contains(.shaderRead) { mtlUsage.insert(.shaderRead) }
+        if usage.contains(.shaderWrite) { mtlUsage.insert(.shaderWrite) }
+        if usage.contains(.renderTarget) { mtlUsage.insert(.renderTarget) }
+        return mtlUsage
     }
 }

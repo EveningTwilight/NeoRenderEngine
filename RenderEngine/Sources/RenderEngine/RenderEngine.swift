@@ -127,8 +127,7 @@ public class GraphicEngine {
         
         // Create/Update Depth Texture
         if depthTexture == nil || depthTexture!.width != texture.width || depthTexture!.height != texture.height {
-            // Use .depth32Float (252)
-            let depthDesc = TextureDescriptor(width: texture.width, height: texture.height, pixelFormat: 252, usage: 0)
+            let depthDesc = TextureDescriptor(width: texture.width, height: texture.height, pixelFormat: .depth32Float, usage: [.renderTarget])
             depthTexture = device.makeTexture(descriptor: depthDesc)
         }
         
