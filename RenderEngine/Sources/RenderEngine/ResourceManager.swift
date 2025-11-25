@@ -72,7 +72,44 @@ public class ResourceManager {
             return shader
         } else {
             let source = try String(contentsOf: url, encoding: .utf8)
-            return try createShader(name: name, source: source)
+            
+            // Preprocess source to handle #include
+            let preprocessor = ShaderPreprocessor { includeName in
+                // Try to find the included file in the same bundle
+                // We assume included files are in the same directory or relative to bundle root
+                // For simplicity, we search the bundle for the file name
+                // A more robust implementation would handle relative paths based on current file
+                
+                // 1. Try relative to current file (if we knew the directory, but here we just have fileName)
+                // 2. Try bundle resource lookup
+                
+                // Strategy: Look for resource with the includeName
+                
+                // Try to find in the same subdirectory if possible, or just flat search
+                // Since bundle.url(forResource:...) searches flat by default unless subdirectory is specified
+                // We try to be smart: if the original file was in "Shaders/CubeShader.metal", we might want to look in "Shaders/"
+                
+                var includeURL: URL?
+                
+                // Try to infer subdirectory from the original fileName
+                let originalPath = (fileName as NSString).deletingLastPathComponent
+                if !originalPath.isEmpty {
+                    includeURL = bundle.url(forResource: includeName, withExtension: nil, subdirectory: originalPath)
+                }
+                
+                if includeURL == nil {
+                    includeURL = bundle.url(forResource: includeName, withExtension: nil)
+                }
+                
+                guard let foundURL = includeURL else {
+                    throw NSError(domain: "ResourceManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Included file '\(includeName)' not found"])
+                }
+                
+                return try String(contentsOf: foundURL, encoding: .utf8)
+            }
+            
+            let processedSource = try preprocessor.process(source: source, currentFile: fileName)
+            return try createShader(name: name, source: processedSource)
         }
     }
     
