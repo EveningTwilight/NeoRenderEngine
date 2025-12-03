@@ -37,6 +37,7 @@
 | 天空盒 (Skybox) | ✅ 已完成 | 支持 Cubemap 纹理与程序化生成，独立渲染 Pass |
 | 渲染循环 | ✅ 已完成 | DisplayLink/Timer 驱动，集成 Scene Graph |
 | 交互层 | ✅ 已完成 | SwiftUI/UIKit/AppKit 桥接，Scene Graph 事件分发 |
+| 后处理 (Post-processing) | ✅ 已完成 | HDR 渲染, Bloom (泛光), Tone Mapping (色调映射), Gamma 校正 |
 
 ## 状态图例
 - ✅ 已完成

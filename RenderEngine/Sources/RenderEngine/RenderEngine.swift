@@ -40,6 +40,13 @@ public class GraphicEngine {
         return SceneRenderer(device: self.device)
     }()
     
+    // Post Processing Support
+    public lazy var postProcessor: PostProcessor = {
+        return PostProcessor(device: self.device)
+    }()
+    private var offscreenTexture: Texture?
+    public var isPostProcessingEnabled: Bool = true
+    
     private var isRunning: Bool = false
     private var preferredFrameRate: Int = 60
     private var commandQueue: CommandQueue
@@ -144,9 +151,20 @@ public class GraphicEngine {
             depthTexture = device.makeTexture(descriptor: depthDesc)
         }
         
-        // 2. Create RenderPassDescriptor
+        // Post Processing Setup
+        var renderTargetTexture = texture
+        if isPostProcessingEnabled {
+             if offscreenTexture == nil || offscreenTexture!.width != texture.width || offscreenTexture!.height != texture.height {
+                 // Use rgba16Float for HDR
+                 let desc = TextureDescriptor(width: texture.width, height: texture.height, pixelFormat: .rgba16Float, usage: [.renderTarget, .shaderRead])
+                 offscreenTexture = device.makeTexture(descriptor: desc)
+             }
+             renderTargetTexture = offscreenTexture!
+        }
+        
+        // 2. Create RenderPassDescriptor for Scene
         let passDescriptor = RenderPassDescriptor(
-            colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: Vec4(0, 0, 0, 1))],
+            colorTargets: [RenderTargetDescriptor(texture: renderTargetTexture, clearColor: Vec4(0, 0, 0, 1))],
             depthTarget: RenderTargetDescriptor(texture: depthTexture!, clearDepth: 1.0)
         )
         
@@ -163,14 +181,25 @@ public class GraphicEngine {
         // 3. Create CommandBuffer
         let commandBuffer = commandQueue.makeCommandBuffer()
         
-        // 4. Draw
+        // 4. Draw Scene
         if let delegate = delegate {
             delegate.draw(in: self, commandBuffer: commandBuffer, renderPassDescriptor: passDescriptor)
         } else if let scene = scene, let camera = camera {
             sceneRenderer.render(scene: scene, camera: camera, in: commandBuffer, passDescriptor: passDescriptor)
         }
         
-        // 5. Present and Commit
+        // 5. Post Processing Pass
+        if isPostProcessingEnabled, let sourceTexture = offscreenTexture {
+            // Create Pass for Screen
+            let screenPassDescriptor = RenderPassDescriptor(
+                colorTargets: [RenderTargetDescriptor(texture: texture, clearColor: nil)], // No clear needed, we overwrite
+                depthTarget: nil // No depth needed for full screen quad
+            )
+            
+            postProcessor.render(texture: sourceTexture, in: commandBuffer, passDescriptor: screenPassDescriptor)
+        }
+        
+        // 6. Present and Commit
         commandBuffer.present(texture)
         commandBuffer.commit()
     }

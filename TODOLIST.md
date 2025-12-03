@@ -77,4 +77,11 @@
   - [x] 组件化架构 (Component System)
   - [x] 渲染循环集成 (SceneRenderer)
   - [x] 交互系统集成 (Input System Integration)
+  - [x] 天空盒 (Skybox)
+- [ ] **后处理 (Post-processing)**
+  - [x] 基础后处理管线 (Render to Texture)
+  - [x] Gamma Correction (伽马校正)
+  - [x] Tone Mapping (色调映射) (Reinhard)
+  - [x] HDR Support (.rgba16Float)
+  - [x] Bloom (泛光) 效果 (Multi-pass Blur)
 

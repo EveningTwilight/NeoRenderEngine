@@ -71,7 +71,8 @@ class SceneGraphViewModel: ObservableObject {
             var pipelineDesc = PipelineDescriptor(label: "SimplePipeline")
             pipelineDesc.vertexFunction = "vertex_main"
             pipelineDesc.fragmentFunction = "fragment_main"
-            pipelineDesc.colorPixelFormat = .bgra8Unorm
+            // Use rgba16Float for HDR rendering to offscreen texture
+            pipelineDesc.colorPixelFormat = .rgba16Float
             pipelineDesc.depthPixelFormat = .depth32Float
             pipelineDesc.vertexDescriptor = cubeMesh.vertexDescriptor
             
@@ -202,7 +203,8 @@ class SceneGraphViewModel: ObservableObject {
             var skyboxPipelineDesc = PipelineDescriptor(label: "SkyboxPipeline")
             skyboxPipelineDesc.vertexFunction = "vertex_main"
             skyboxPipelineDesc.fragmentFunction = "fragment_main"
-            skyboxPipelineDesc.colorPixelFormat = .bgra8Unorm
+            // Use rgba16Float for HDR rendering to offscreen texture
+            skyboxPipelineDesc.colorPixelFormat = .rgba16Float
             skyboxPipelineDesc.depthPixelFormat = .depth32Float
             skyboxPipelineDesc.vertexDescriptor = skybox.mesh.vertexDescriptor
             
@@ -211,7 +213,44 @@ class SceneGraphViewModel: ObservableObject {
             
             engine.sceneRenderer.skybox = skybox
             
-            // 7. Bind to Engine
+            // 7. Setup Post Processing
+            let postProcessShaderSource = try loadShaderSource(name: "PostProcess", ext: "metal")
+            let postProcessShader = try resourceManager.createShader(name: "PostProcess", source: postProcessShaderSource)
+            
+            var postProcessPipelineDesc = PipelineDescriptor(label: "PostProcessPipeline")
+            postProcessPipelineDesc.vertexFunction = "vertex_post_process"
+            postProcessPipelineDesc.fragmentFunction = "fragment_post_process"
+            postProcessPipelineDesc.colorPixelFormat = .bgra8Unorm
+            postProcessPipelineDesc.depthPixelFormat = .invalid
+            postProcessPipelineDesc.vertexDescriptor = engine.postProcessor.quadMesh.vertexDescriptor
+            
+            let postProcessPipeline = try resourceManager.createPipeline(name: "PostProcessPipeline", descriptor: postProcessPipelineDesc, shader: postProcessShader)
+            engine.postProcessor.pipelineState = postProcessPipeline
+            
+            // Setup Bloom Pipelines
+            // 1. Bright Pass
+            var brightPipelineDesc = PipelineDescriptor(label: "BrightPipeline")
+            brightPipelineDesc.vertexFunction = "vertex_post_process"
+            brightPipelineDesc.fragmentFunction = "fragment_bloom"
+            brightPipelineDesc.colorPixelFormat = .rgba16Float // Intermediate HDR
+            brightPipelineDesc.depthPixelFormat = .invalid
+            brightPipelineDesc.vertexDescriptor = engine.postProcessor.quadMesh.vertexDescriptor
+            
+            let brightPipeline = try resourceManager.createPipeline(name: "BrightPipeline", descriptor: brightPipelineDesc, shader: postProcessShader)
+            engine.postProcessor.brightPipeline = brightPipeline
+            
+            // 2. Blur Pass
+            var blurPipelineDesc = PipelineDescriptor(label: "BlurPipeline")
+            blurPipelineDesc.vertexFunction = "vertex_post_process"
+            blurPipelineDesc.fragmentFunction = "fragment_blur"
+            blurPipelineDesc.colorPixelFormat = .rgba16Float // Intermediate HDR
+            blurPipelineDesc.depthPixelFormat = .invalid
+            blurPipelineDesc.vertexDescriptor = engine.postProcessor.quadMesh.vertexDescriptor
+            
+            let blurPipeline = try resourceManager.createPipeline(name: "BlurPipeline", descriptor: blurPipelineDesc, shader: postProcessShader)
+            engine.postProcessor.blurPipeline = blurPipeline
+            
+            // 8. Bind to Engine
             engine.scene = scene
             engine.camera = camera
             

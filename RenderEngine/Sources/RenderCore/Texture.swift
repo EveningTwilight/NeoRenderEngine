@@ -3,6 +3,7 @@ import Foundation
 public enum PixelFormat {
     case bgra8Unorm
     case rgba8Unorm
+    case rgba16Float
     case depth32Float
     case invalid
 }

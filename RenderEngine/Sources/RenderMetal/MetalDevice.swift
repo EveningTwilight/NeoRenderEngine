@@ -189,6 +189,7 @@ public class MetalDevice: RenderDevice {
         switch format {
         case .bgra8Unorm: return .bgra8Unorm
         case .rgba8Unorm: return .rgba8Unorm
+        case .rgba16Float: return .rgba16Float
         case .depth32Float: return .depth32Float
         case .invalid: return .invalid
         }
