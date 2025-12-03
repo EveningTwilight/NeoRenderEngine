@@ -1,51 +1,79 @@
-# 工作流规范 (Workflow)
+# 开发工作流规范 (Development Workflow)
 
-## 1. 代码提交规范
+为了保证 NeoRenderEngine 的代码质量和版本稳定性，所有贡献者请遵循以下工作流规范。
 
-### 1.1 提交信息 (Commit Message)
-所有提交信息必须遵循以下格式：
-`[Copilot] <type>: <description>`
+## 1. 分支管理策略 (Branching Model)
 
-- **type**:
-  - `feat`: 新功能
-  - `fix`: 修复 Bug
-  - `docs`: 文档修改
-  - `style`: 代码格式修改（不影响代码运行的变动）
-  - `refactor`: 代码重构（即不是新增功能，也不是修改 bug 的代码变动）
-  - `test`: 增加测试
-  - `chore`: 构建过程或辅助工具的变动
+本项目采用 **GitHub Flow** 的变体，适应版本发布需求。
 
-- **description**: 简短描述本次提交的内容（必须使用中文）。
+### 1.1 核心分支
+- **`main`**: 主分支，始终保持**稳定**和**可发布**状态。所有合入 `main` 的代码必须经过测试并通过 Code Review。
+- **`develop`**: (可选) 暂不启用。目前采用 Feature Branch -> Main 的轻量级模式。
 
-示例：
-`[Copilot] feat: 添加矩阵乘法实现`
-`[Copilot] fix: 修复 Metal 缓冲区内存泄漏`
+### 1.2 临时分支
+- **`feat/<feature-name>`**: 新功能开发分支。
+  - 示例: `feat/bloom-effect`, `feat/video-texture`
+- **`fix/<issue-id-or-desc>`**: Bug 修复分支。
+  - 示例: `fix/crash-on-ios-15`, `fix/shadow-acne`
+- **`docs/<desc>`**: 文档更新分支。
 
-### 1.4 沟通规范
-- **语言**: 除专业术语（如 Metal, Shader, Pipeline 等）外，所有交流、文档、注释均使用**中文**。
-- **术语**: 保持专业术语的英文原文，避免不准确的翻译。
+## 2. 开发流程
 
-## 2. 代码质量规范
-- **main**: 主分支，保持稳定，随时可发布。
-- **develop**: 开发分支，包含最新已合并的功能。
-- **feature/<name>**: 功能分支，用于开发新功能。
+1.  **拉取分支**:
+    ```bash
+    git checkout main
+    git pull origin main
+    git checkout -b feat/my-new-feature
+    ```
 
-### 1.3 Git LFS 管理
-本项目包含二进制资源（图片、模型、视频等），必须使用 Git LFS 进行管理。
-- 在提交新的资源文件前，请确保其扩展名已在 `.gitattributes` 中配置。
-- 常用 LFS 文件类型：`png`, `jpg`, `mp4`, `obj`, `lib`, `a` 等。
+2.  **提交代码**:
+    - **必须**遵循提交信息规范，由 Copilot 辅助生成的提交必须包含标识。
+    - 格式: `[Copilot] <type>(<scope>): <description>`
+    - 示例: `[Copilot] feat(render): add support for rgba16float textures`
 
-## 2. 代码质量规范
+3.  **运行测试**:
+    - 在提交 Pull Request 前，必须在本地运行所有单元测试。
+    - `cd RenderEngine && swift test`
 
-### 2.1 单元测试
-- 核心功能模块（尤其是 `RenderMath` 和 `RenderCore`）提交前必须包含单元测试。
-- **代码覆盖率要求**: 不低于 **85%**。
+4.  **提交 Pull Request (PR)**:
+    - 将分支推送到远程仓库。
+    - 在 GitHub 上创建 PR，目标分支为 `main`。
+    - 填写 PR 模板，关联相关的 Issue。
+    - 等待 CI 通过（如有）和 Code Review。
 
-### 2.2 代码风格
-- **注释**: 使用中文，保持简洁明了。避免冗余的文档注释，除非是公开 API 的必要说明。
-- **命名**: 遵循 Swift API Design Guidelines。
-- **清理**: 提交前删除无用的代码、注释掉的代码块和调试日志。
+5.  **合并**:
+    - Review 通过后，使用 "Squash and Merge" 合并到 `main`，保持提交历史整洁。
 
-## 3. 文档维护
-- **FEATURES.md**: 每当完成一个新特性或规划新特性时，更新此文档。
-- **TODOLIST.md**: 任务完成时及时勾选，并拆解新的子任务。
+## 3. 版本发布流程 (Release Process)
+
+当 `main` 分支积累了足够的功能或修复后，进行版本发布。
+
+1.  **准备发布**:
+    - 创建 `release/v1.x.x` 分支。
+    - 更新 `Package.swift` 中的版本号（如有必要）。
+    - 更新 `CHANGELOG.md`。
+
+2.  **打标签 (Tagging)**:
+    - 合并 release 分支到 `main`。
+    - 打上语义化版本标签:
+      ```bash
+      git tag -a v1.0.0 -m "Release version 1.0.0"
+      git push origin v1.0.0
+      ```
+
+3.  **GitHub Release**:
+    - 在 GitHub Releases 页面草拟新版本。
+    - 选择刚才推送的 Tag。
+    - 自动生成 Release Notes。
+    - (可选) 上传编译好的 XCFramework 二进制包，供非 SPM 用户使用。
+
+## 4. 持续集成 (CI) 规划
+
+未来将集成 GitHub Actions 自动化以下任务：
+- **Build & Test**: 每次 Push 和 PR 时自动编译并运行 `swift test`。
+- **Lint**: 使用 SwiftLint 检查代码风格。
+- **Release**: 推送 Tag 时自动打包 XCFramework 并发布到 GitHub Releases。
+
+## 5. 问题追踪 (Issue Tracking)
+- 使用 GitHub Issues 追踪 Bug 和 Feature Request。
+- 使用 Labels 分类 (e.g., `bug`, `enhancement`, `documentation`).

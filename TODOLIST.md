@@ -85,3 +85,33 @@
   - [x] HDR Support (.rgba16Float)
   - [x] Bloom (泛光) 效果 (Multi-pass Blur)
 
+## Phase 7: 多媒体支持 (Multimedia - v1.1+)
+- [ ] **视频支持**
+  - [ ] AVFoundation 集成
+  - [ ] CVPixelBuffer 到 Texture 的转换 (YUV/RGB)
+- [ ] **文本渲染**
+  - [ ] CoreText / SDF 字体渲染集成
+  - [ ] 2D 文本节点
+- [ ] **2D 能力**
+  - [ ] SpriteBatch (2D 精灵批处理)
+  - [ ] UI 坐标系与正交投影支持
+
+## Phase 8: 资产管线增强 (Asset Pipeline - v1.2+)
+- [ ] **多格式模型支持**
+  - [ ] GLB/glTF 2.0 加载器 (基于 Model I/O 或第三方库)
+  - [ ] FBX 格式支持
+  - [ ] C3T/C3D 自定义格式支持
+- [ ] **高级材质支持**
+  - [ ] PBR 材质工作流 (Metallic/Roughness)
+  - [ ] 材质序列化/反序列化 (JSON/YAML)
+  - [ ] Shader Graph (节点式材质编辑器) 基础运行时支持
+
+## Phase 9: 性能与架构优化 (Architecture & Performance - v2.0)
+- [ ] **多线程渲染架构 (Multithreaded Rendering)**
+  - [ ] 任务系统 (Job System): 基于拓扑序的任务调度
+  - [ ] 渲染前后端分离 (Frontend/Backend Separation)
+  - [ ] 并行 CommandBuffer 编码 (Parallel Encoding)
+- [ ] **资源流式加载 (Streaming)**
+  - [ ] 异步纹理上传
+  - [ ] 异步模型加载
+
