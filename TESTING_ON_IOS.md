@@ -14,7 +14,7 @@ You can use `xcodebuild` to run tests on a simulator.
 1. **List available destinations:**
 
     ```bash
-    xcodebuild -scheme RenderEngine -showdestinations
+    xcodebuild -scheme NeoRenderEngine -showdestinations
     ```
 
     Look for a destination that matches an iOS Simulator, for example: `platform=iOS Simulator,name=iPhone 15,OS=17.0`.
@@ -25,14 +25,14 @@ You can use `xcodebuild` to run tests on a simulator.
 
     ```bash
     xcodebuild test \
-        -scheme RenderEngine \
+        -scheme NeoRenderEngine \
         -destination 'platform=iOS Simulator,name=iPhone 15'
     ```
 
 ## Running Tests via Xcode
 
-1. Open the `RenderEngine` folder in Xcode (or open `Package.swift`).
-2. Select the `RenderEngine` scheme.
+1. Open the `NeoRenderEngine` folder in Xcode (open `Package.swift`).
+2. Select the `NeoRenderEngine` scheme (or `RenderEngine` target scheme).
 3. Select an iOS Simulator or Device as the run destination.
 4. Press `Cmd+U` to run the tests.
 

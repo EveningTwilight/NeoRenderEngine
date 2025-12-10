@@ -33,7 +33,7 @@
 
 3.  **运行测试**:
     - 在提交 Pull Request 前，必须在本地运行所有单元测试。
-    - `cd RenderEngine && swift test`
+    - `swift test`
 
 4.  **提交 Pull Request (PR)**:
     - 将分支推送到远程仓库。
