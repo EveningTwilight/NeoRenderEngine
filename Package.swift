@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "RenderEngine",
+    name: "NeoRenderEngine",
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15)

@@ -1,4 +1,4 @@
-# RenderEngine
+# NeoRenderEngine
 
 A lightweight, cross-platform rendering engine abstraction layer (RHI) supporting Metal and OpenGL ES 2.0 (Stub).
 
@@ -9,6 +9,31 @@ A lightweight, cross-platform rendering engine abstraction layer (RHI) supportin
 - **RenderMetal**: Metal backend implementation.
 - **RenderGL**: OpenGL ES 2.0 backend implementation (Work in Progress).
 
+## Installation
+
+### Swift Package Manager
+
+Add the following to your `Package.swift` dependencies:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/your-repo/NeoRenderEngine.git", from: "1.0.0")
+]
+```
+
+And add `RenderEngine` to your target dependencies:
+
+```swift
+targets: [
+    .target(
+        name: "YourTarget",
+        dependencies: [
+            .product(name: "RenderEngine", package: "NeoRenderEngine")
+        ]
+    )
+]
+```
+
 ## Usage
 
 ### Initialization
@@ -16,10 +41,11 @@ A lightweight, cross-platform rendering engine abstraction layer (RHI) supportin
 ```swift
 import RenderEngine
 
-// Create a device (automatically chooses Metal on Apple platforms)
-guard let device = RenderEngine.makeDevice() else {
-    fatalError("Failed to create render device")
-}
+// Create the graphic engine (automatically chooses Metal on Apple platforms)
+let engine = try GraphicEngine(backendType: .metal)
+
+// Access the device
+let device = engine.device
 
 // Create a command queue
 let commandQueue = device.makeCommandQueue()

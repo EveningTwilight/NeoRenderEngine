@@ -8,15 +8,15 @@ let package = Package(
         .iOS(.v14)
     ],
     dependencies: [
-        .package(path: "../RenderEngine")
+        .package(path: "..")
     ],
     targets: [
         .executableTarget(
             name: "RenderDemo",
             dependencies: [
-                .product(name: "RenderEngine", package: "RenderEngine"),
-                .product(name: "RenderMath", package: "RenderEngine"),
-                .product(name: "RenderCore", package: "RenderEngine")
+                .product(name: "RenderEngine", package: "NeoRenderEngine"),
+                .product(name: "RenderMath", package: "NeoRenderEngine"),
+                .product(name: "RenderCore", package: "NeoRenderEngine")
             ],
             resources: [
                 .copy("Resources")
