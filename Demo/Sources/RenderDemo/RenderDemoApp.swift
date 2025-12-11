@@ -1,5 +1,5 @@
 import SwiftUI
-import RenderEngine
+import NeoRenderEngine
 
 @main
 struct RenderDemoApp: App {

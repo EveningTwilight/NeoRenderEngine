@@ -14,7 +14,7 @@ let package = Package(
         .executableTarget(
             name: "RenderDemo",
             dependencies: [
-                .product(name: "RenderEngine", package: "NeoRenderEngine"),
+                .product(name: "NeoRenderEngine", package: "NeoRenderEngine"),
                 .product(name: "RenderMath", package: "NeoRenderEngine"),
                 .product(name: "RenderCore", package: "NeoRenderEngine")
             ],

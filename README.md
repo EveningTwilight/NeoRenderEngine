@@ -1,5 +1,9 @@
 # NeoRenderEngine
 
+![Build Status](https://github.com/EveningTwilight/NeoRenderEngine/actions/workflows/swift.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20iOS-lightgrey.svg)
+
 A lightweight, cross-platform rendering engine abstraction layer (RHI) supporting Metal and OpenGL ES 2.0 (Stub).
 
 ## Features
@@ -17,18 +21,18 @@ Add the following to your `Package.swift` dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-repo/NeoRenderEngine.git", from: "1.0.0")
+    .package(url: "https://github.com/EveningTwilight/NeoRenderEngine.git", from: "1.0.0")
 ]
 ```
 
-And add `RenderEngine` to your target dependencies:
+And add `NeoRenderEngine` to your target dependencies:
 
 ```swift
 targets: [
     .target(
         name: "YourTarget",
         dependencies: [
-            .product(name: "RenderEngine", package: "NeoRenderEngine")
+            .product(name: "NeoRenderEngine", package: "NeoRenderEngine")
         ]
     )
 ]
@@ -39,7 +43,7 @@ targets: [
 ### Initialization
 
 ```swift
-import RenderEngine
+import NeoRenderEngine
 
 // Create the graphic engine (automatically chooses Metal on Apple platforms)
 let engine = try GraphicEngine(backendType: .metal)

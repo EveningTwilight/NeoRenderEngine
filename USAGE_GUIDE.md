@@ -5,16 +5,16 @@ NeoRenderEngine 是一个基于 Swift 开发的轻量级跨平台渲染引擎，
 ## 1. 快速开始
 
 ### 1.1 环境要求
-- macOS 12.0+ 或 iOS 13.0+
-- Xcode 14.0+
-- Swift 5.7+
+- macOS 10.15+ 或 iOS 13.0+
+- Xcode 15.0+ (Swift Tools 5.9)
+- Swift 5.9+
 
 ### 1.2 安装
 在你的 `Package.swift` 中添加依赖：
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-repo/NeoRenderEngine.git", from: "1.0.0")
+    .package(url: "https://github.com/EveningTwilight/NeoRenderEngine.git", from: "1.0.0")
 ]
 ```
 
@@ -24,7 +24,7 @@ dependencies: [
 首先，创建一个 `GraphicEngine` 实例。建议在 `ViewModel` 或 `ViewController` 中持有它。
 
 ```swift
-import RenderEngine
+import NeoRenderEngine
 
 // 创建 Metal 后端引擎
 let engine = try GraphicEngine(backendType: .metal)

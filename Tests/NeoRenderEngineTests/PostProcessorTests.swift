@@ -1,6 +1,6 @@
 import XCTest
 @testable import RenderCore
-@testable import RenderEngine
+@testable import NeoRenderEngine
 @testable import RenderMath
 
 class PostProcessorTests: XCTestCase {

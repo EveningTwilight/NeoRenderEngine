@@ -1,5 +1,5 @@
 import XCTest
-@testable import RenderEngine
+@testable import NeoRenderEngine
 
 final class GraphicEngineTests: XCTestCase {
     

@@ -10,8 +10,8 @@ let package = Package(
     products: [
         // 完整引擎
         .library(
-            name: "RenderEngine",
-            targets: ["RenderEngine"]
+            name: "NeoRenderEngine",
+            targets: ["NeoRenderEngine"]
         ),
         // 核心抽象层 (RHI)
         .library(
@@ -55,14 +55,14 @@ let package = Package(
         
         // 5. 引擎高层封装 (聚合后端)
         .target(
-            name: "RenderEngine",
+            name: "NeoRenderEngine",
             dependencies: [
                 "RenderCore",
                 "RenderMath",
                 "RenderMetal",
                 "RenderGL"
             ],
-            path: "Sources/RenderEngine"
+            path: "Sources/NeoRenderEngine"
         ),
         
         // 测试目标
@@ -75,8 +75,8 @@ let package = Package(
             dependencies: ["RenderCore"]
         ),
         .testTarget(
-            name: "RenderEngineTests",
-            dependencies: ["RenderEngine"]
+            name: "NeoRenderEngineTests",
+            dependencies: ["NeoRenderEngine"]
         ),
     ]
 )
