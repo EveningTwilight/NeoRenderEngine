@@ -1,26 +1,19 @@
 # RenderEngine Demo
 
-This is a simple demo application showcasing the capabilities of the RenderEngine.
+This directory contains example code showcasing the capabilities of the NeoRenderEngine.
 
-## How to Run
+## How to Use
 
-### Option 1: Command Line
+The Demo examples are provided as reference code that should be integrated directly into your own projects. Since the Demo directory no longer maintains its own Package.swift, you should:
 
-You can run the demo directly from the command line using Swift Package Manager:
+1. Copy the relevant demo source files from `Demo/Sources/RenderDemo/` into your project
+2. Add NeoRenderEngine as a dependency in your project's Package.swift
+3. Adapt the example code to fit your application's needs
 
-```bash
-cd Demo
-swift run
-```
+## Example Features Demonstrated
 
-### Option 2: Xcode
+- Initializing `RenderEngine` with Metal backend
+- Rendering a simple colored triangle using custom shaders
+- Implementing the `RenderEngineDelegate` workflow
 
-1. Open the `Demo` folder in Xcode (File -> Open...).
-2. Select the `RenderDemo` scheme.
-3. Run (Cmd+R).
-
-## Features
-
-- Initializes `RenderEngine` with Metal backend.
-- Renders a simple colored triangle using a custom shader.
-- Demonstrates the `RenderEngineDelegate` workflow.
+Refer to the main project README for information on adding NeoRenderEngine as a dependency.
